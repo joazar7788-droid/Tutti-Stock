@@ -1,16 +1,26 @@
-# Secrets and credentials
+# Dependencies
+node_modules/
+
+# Next.js
+.next/
+out/
+
+# Environment
 .env
-credentials.json
-token.json
-
-# Temporary/intermediate files
-.tmp/
-
-# Python
-__pycache__/
-*.pyc
-*.pyo
-.venv/
+.env.local
+.env*.local
 
 # OS
 .DS_Store
+
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts
+
+# PWA
+public/sw.js
+public/workbox-*.js
+public/swe-worker-*.js
+
+# Misc
+.tmp/

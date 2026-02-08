@@ -1,0 +1,74 @@
+"use server";
+
+import { revalidatePath } from "next/cache";
+import { createClient } from "@/lib/supabase/server";
+
+export async function createItem(formData: FormData) {
+  const supabase = await createClient();
+
+  const { error } = await supabase.from("items").insert({
+    sku: formData.get("sku") as string,
+    name: formData.get("name") as string,
+    category: (formData.get("category") as string) || null,
+    unit: (formData.get("unit") as string) || "pcs",
+    reorder_point: parseInt(formData.get("reorder_point") as string) || 0,
+    target_stock: parseInt(formData.get("target_stock") as string) || 0,
+  });
+
+  if (error) return { error: error.message };
+
+  revalidatePath("/items");
+  revalidatePath("/inventory");
+  return { success: true };
+}
+
+export async function updateItem(id: string, formData: FormData) {
+  const supabase = await createClient();
+
+  const { error } = await supabase
+    .from("items")
+    .update({
+      sku: formData.get("sku") as string,
+      name: formData.get("name") as string,
+      category: (formData.get("category") as string) || null,
+      unit: (formData.get("unit") as string) || "pcs",
+      reorder_point: parseInt(formData.get("reorder_point") as string) || 0,
+      target_stock: parseInt(formData.get("target_stock") as string) || 0,
+    })
+    .eq("id", id);
+
+  if (error) return { error: error.message };
+
+  revalidatePath("/items");
+  revalidatePath("/inventory");
+  return { success: true };
+}
+
+export async function toggleItemActive(id: string, isActive: boolean) {
+  const supabase = await createClient();
+
+  const { error } = await supabase
+    .from("items")
+    .update({ is_active: isActive })
+    .eq("id", id);
+
+  if (error) return { error: error.message };
+
+  revalidatePath("/items");
+  revalidatePath("/inventory");
+  return { success: true };
+}
+
+export async function toggleItemFavorite(id: string, isFavorite: boolean) {
+  const supabase = await createClient();
+
+  const { error } = await supabase
+    .from("items")
+    .update({ is_favorite: isFavorite })
+    .eq("id", id);
+
+  if (error) return { error: error.message };
+
+  revalidatePath("/items");
+  return { success: true };
+}
