@@ -119,6 +119,7 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
+  const recipients = recipientEmail.split(",").map((e) => e.trim()).filter(Boolean);
 
   const resendKey = process.env.RESEND_API_KEY;
   if (!resendKey) {
@@ -132,7 +133,7 @@ export async function POST(request: NextRequest) {
 
   const { error: emailError } = await resend.emails.send({
     from: "Tutti Stock <onboarding@resend.dev>",
-    to: recipientEmail,
+    to: recipients,
     subject: `Weekly Inventory Report (${startDate} to ${endDate})`,
     html,
     attachments: [
