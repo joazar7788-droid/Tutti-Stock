@@ -14,6 +14,9 @@ export function ItemForm({
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [baseUnit, setBaseUnit] = useState<"boxes" | "pcs">(
+    item?.base_unit ?? "boxes"
+  );
 
   async function handleSubmit(formData: FormData) {
     setLoading(true);
@@ -62,28 +65,50 @@ export function ItemForm({
         />
       </div>
 
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Category
+        </label>
+        <input
+          name="category"
+          defaultValue={item?.category ?? ""}
+          placeholder="e.g. Yogurt Base"
+          className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-500"
+        />
+      </div>
+
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Category
+            Base Unit
           </label>
-          <input
-            name="category"
-            defaultValue={item?.category ?? ""}
-            placeholder="e.g. Yogurt Base"
+          <select
+            name="base_unit"
+            value={baseUnit}
+            onChange={(e) => setBaseUnit(e.target.value as "boxes" | "pcs")}
             className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-500"
-          />
+          >
+            <option value="boxes">Boxes</option>
+            <option value="pcs">Pieces (pcs)</option>
+          </select>
+          <p className="text-xs text-gray-400 mt-1">
+            How this item is counted in inventory
+          </p>
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Unit
+            Pcs per Box
           </label>
           <input
-            name="unit"
-            defaultValue={item?.unit ?? "pcs"}
-            placeholder="e.g. kg, pcs, litre"
+            name="pcs_per_box"
+            type="number"
+            min={1}
+            defaultValue={item?.pcs_per_box ?? 1}
             className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-500"
           />
+          <p className="text-xs text-gray-400 mt-1">
+            How many individual pieces come in one box
+          </p>
         </div>
       </div>
 

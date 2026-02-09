@@ -7,6 +7,8 @@ export interface CachedItem {
   name: string;
   category: string | null;
   unit: string;
+  base_unit: "boxes" | "pcs";
+  pcs_per_box: number;
   is_favorite: boolean;
   is_active: boolean;
 }
@@ -44,6 +46,16 @@ class TuttiDB extends Dexie {
       items: "id, sku, name, category, is_favorite",
       locations: "id, type",
       pendingTransactions: "++localId, synced, createdAt",
+    });
+    this.version(2).stores({
+      items: "id, sku, name, category, is_favorite",
+      locations: "id, type",
+      pendingTransactions: "++localId, synced, createdAt",
+    }).upgrade((tx) => {
+      return tx.table("items").toCollection().modify((item) => {
+        if (!item.base_unit) item.base_unit = "pcs";
+        if (!item.pcs_per_box) item.pcs_per_box = 1;
+      });
     });
   }
 }

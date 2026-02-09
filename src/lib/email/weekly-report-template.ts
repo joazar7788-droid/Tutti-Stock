@@ -1,3 +1,5 @@
+import { formatQty } from "@/lib/unit-utils";
+
 type TransferByBranch = {
   location_name: string;
   total_qty: number;
@@ -13,7 +15,8 @@ type TopItem = {
 type LowStockItem = {
   item_name: string;
   sku: string;
-  unit: string;
+  base_unit: "boxes" | "pcs";
+  pcs_per_box: number;
   on_hand: number;
   reorder_point: number;
 };
@@ -48,8 +51,8 @@ export function buildReportHtml({
       <tr>
         <td style="padding: 8px; border-bottom: 1px solid #f3f4f6;">${item.item_name}</td>
         <td style="padding: 8px; border-bottom: 1px solid #f3f4f6; color: #6b7280;">${item.sku}</td>
-        <td style="padding: 8px; border-bottom: 1px solid #f3f4f6; text-align: right; color: #dc2626; font-weight: bold;">${item.on_hand} ${item.unit}</td>
-        <td style="padding: 8px; border-bottom: 1px solid #f3f4f6; text-align: right;">${item.reorder_point} ${item.unit}</td>
+        <td style="padding: 8px; border-bottom: 1px solid #f3f4f6; text-align: right; color: #dc2626; font-weight: bold;">${formatQty(item.on_hand, item.base_unit, item.pcs_per_box)}</td>
+        <td style="padding: 8px; border-bottom: 1px solid #f3f4f6; text-align: right;">${formatQty(item.reorder_point, item.base_unit, item.pcs_per_box)}</td>
       </tr>`
         )
         .join("")}
@@ -125,16 +128,17 @@ export function buildInventoryCsv(
   inventory: Array<{
     sku: string;
     item_name: string;
-    unit: string;
+    base_unit: string;
+    pcs_per_box: number;
     on_hand: number;
     reorder_point: number;
     target_stock: number;
   }>
 ) {
-  const header = "SKU,Item Name,Unit,On Hand,Reorder Point,Target Stock";
+  const header = "SKU,Item Name,Base Unit,Pcs/Box,On Hand,Reorder Point,Target Stock";
   const rows = inventory.map(
     (i) =>
-      `"${i.sku}","${i.item_name}","${i.unit}",${i.on_hand},${i.reorder_point},${i.target_stock}`
+      `"${i.sku}","${i.item_name}","${i.base_unit}",${i.pcs_per_box},${i.on_hand},${i.reorder_point},${i.target_stock}`
   );
   return [header, ...rows].join("\n");
 }

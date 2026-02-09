@@ -85,7 +85,8 @@ export async function POST(request: NextRequest) {
     .map((i) => ({
       item_name: i.item_name,
       sku: i.sku,
-      unit: i.unit,
+      base_unit: (i as Record<string, unknown>).base_unit as "boxes" | "pcs",
+      pcs_per_box: (i as Record<string, unknown>).pcs_per_box as number,
       on_hand: i.on_hand,
       reorder_point: i.reorder_point,
     }))
@@ -95,7 +96,8 @@ export async function POST(request: NextRequest) {
   const csvData = (inventoryData ?? []).map((i) => ({
     sku: i.sku,
     item_name: i.item_name,
-    unit: i.unit,
+    base_unit: ((i as Record<string, unknown>).base_unit as string) ?? "pcs",
+    pcs_per_box: ((i as Record<string, unknown>).pcs_per_box as number) ?? 1,
     on_hand: i.on_hand,
     reorder_point: i.reorder_point,
     target_stock: i.target_stock,

@@ -5,7 +5,7 @@ export async function cacheReferenceData() {
   const supabase = createClient();
 
   const [itemsRes, locsRes] = await Promise.all([
-    supabase.from("items").select("id, sku, name, category, unit, is_favorite, is_active").eq("is_active", true),
+    supabase.from("items").select("id, sku, name, category, unit, base_unit, pcs_per_box, is_favorite, is_active").eq("is_active", true),
     supabase.from("locations").select("id, name, type").eq("is_active", true),
   ]);
 

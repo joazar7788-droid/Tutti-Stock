@@ -57,7 +57,7 @@ export function ItemPicker({
                   <span className="font-medium">{item.name}</span>
                 </div>
                 <div className="text-sm text-gray-500">
-                  {item.sku} · {item.category} · {item.unit}
+                  {item.sku} · {item.category} · {item.base_unit}{item.pcs_per_box > 1 ? ` (${item.pcs_per_box} pcs/box)` : ""}
                 </div>
               </div>
               <div

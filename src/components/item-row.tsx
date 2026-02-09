@@ -24,7 +24,7 @@ export function ItemRow({ item, isOwner }: { item: Item; isOwner: boolean }) {
       <div className="flex-1 min-w-0">
         <div className="font-medium truncate">{item.name}</div>
         <div className="text-sm text-gray-500">
-          {item.sku} · {item.category ?? "No category"} · {item.unit}
+          {item.sku} · {item.category ?? "No category"} · {item.base_unit}{item.pcs_per_box > 1 ? ` (${item.pcs_per_box} pcs/box)` : ""}
         </div>
         <div className="text-xs text-gray-400 mt-0.5">
           Reorder at: {item.reorder_point} · Target: {item.target_stock}

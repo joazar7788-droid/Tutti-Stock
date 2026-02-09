@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useUser } from "@/lib/context/user-context";
 import { useRouter } from "next/navigation";
+import { formatQty } from "@/lib/unit-utils";
 import type { InventoryLevel } from "@/lib/database.types";
 
 export default function ReportsPage() {
@@ -100,10 +101,10 @@ export default function ReportsPage() {
                 </div>
                 <div className="text-right">
                   <div className="text-danger-700 font-bold">
-                    {item.on_hand} {item.unit}
+                    {formatQty(item.on_hand, item.base_unit, item.pcs_per_box)}
                   </div>
                   <div className="text-xs text-gray-400">
-                    Reorder at {item.reorder_point}
+                    Reorder at {formatQty(item.reorder_point, item.base_unit, item.pcs_per_box)}
                   </div>
                 </div>
               </div>
@@ -139,10 +140,10 @@ export default function ReportsPage() {
                       : ""
                   }`}
                 >
-                  {item.on_hand} {item.unit}
+                  {formatQty(item.on_hand, item.base_unit, item.pcs_per_box)}
                 </div>
                 <div className="text-xs text-gray-400">
-                  Target: {item.target_stock}
+                  Target: {formatQty(item.target_stock, item.base_unit, item.pcs_per_box)}
                 </div>
               </div>
             </div>

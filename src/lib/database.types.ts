@@ -39,6 +39,8 @@ export type Database = {
           name: string;
           category: string | null;
           unit: string;
+          base_unit: "boxes" | "pcs";
+          pcs_per_box: number;
           reorder_point: number;
           target_stock: number;
           is_active: boolean;
@@ -52,6 +54,8 @@ export type Database = {
           name: string;
           category?: string | null;
           unit?: string;
+          base_unit?: "boxes" | "pcs";
+          pcs_per_box?: number;
           reorder_point?: number;
           target_stock?: number;
           is_active?: boolean;
@@ -65,6 +69,8 @@ export type Database = {
           name?: string;
           category?: string | null;
           unit?: string;
+          base_unit?: "boxes" | "pcs";
+          pcs_per_box?: number;
           reorder_point?: number;
           target_stock?: number;
           is_active?: boolean;
@@ -140,6 +146,8 @@ export type Database = {
           sku: string;
           category: string | null;
           unit: string;
+          base_unit: "boxes" | "pcs";
+          pcs_per_box: number;
           reorder_point: number;
           target_stock: number;
           is_favorite: boolean;

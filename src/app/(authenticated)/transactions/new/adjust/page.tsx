@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { createAdjustment } from "@/app/(authenticated)/transactions/actions";
+import { UnitToggle } from "@/components/unit-toggle";
+import { toPcs } from "@/lib/unit-utils";
 import type { Location, Item } from "@/lib/database.types";
 
 export default function AdjustPage() {
@@ -13,6 +15,7 @@ export default function AdjustPage() {
   const [selectedLocation, setSelectedLocation] = useState("");
   const [selectedItem, setSelectedItem] = useState("");
   const [qty, setQty] = useState(1);
+  const [inputUnit, setInputUnit] = useState<"boxes" | "pcs">("pcs");
   const [direction, setDirection] = useState<"add" | "remove">("remove");
   const [reason, setReason] = useState("");
   const [loading, setLoading] = useState(false);
@@ -30,6 +33,21 @@ export default function AdjustPage() {
     });
   }, []);
 
+  const selectedItemData = items.find((i) => i.id === selectedItem);
+  const pcsQty = selectedItemData
+    ? toPcs(qty, inputUnit, selectedItemData.pcs_per_box)
+    : qty;
+  const showConversion =
+    selectedItemData && inputUnit === "boxes" && selectedItemData.pcs_per_box > 1;
+
+  function handleItemChange(itemId: string) {
+    setSelectedItem(itemId);
+    const item = items.find((i) => i.id === itemId);
+    if (item) {
+      setInputUnit(item.base_unit);
+    }
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!selectedLocation || !selectedItem || !reason.trim()) return;
@@ -40,7 +58,7 @@ export default function AdjustPage() {
     const result = await createAdjustment({
       locationId: selectedLocation,
       itemId: selectedItem,
-      qty,
+      qty: pcsQty,
       direction,
       reason: reason.trim(),
     });
@@ -66,6 +84,7 @@ export default function AdjustPage() {
               setSelectedLocation("");
               setSelectedItem("");
               setQty(1);
+              setInputUnit("pcs");
               setDirection("remove");
               setReason("");
             }}
@@ -125,7 +144,7 @@ export default function AdjustPage() {
           </label>
           <select
             value={selectedItem}
-            onChange={(e) => setSelectedItem(e.target.value)}
+            onChange={(e) => handleItemChange(e.target.value)}
             required
             className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-500 bg-white"
           >
@@ -172,14 +191,28 @@ export default function AdjustPage() {
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Quantity
           </label>
-          <input
-            type="number"
-            value={qty}
-            onChange={(e) => setQty(Math.max(1, parseInt(e.target.value) || 1))}
-            min={1}
-            required
-            className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-500"
-          />
+          <div className="flex items-center gap-3">
+            {selectedItemData && (
+              <UnitToggle
+                value={inputUnit}
+                onChange={setInputUnit}
+                pcsPerBox={selectedItemData.pcs_per_box}
+              />
+            )}
+            <input
+              type="number"
+              value={qty}
+              onChange={(e) => setQty(Math.max(1, parseInt(e.target.value) || 1))}
+              min={1}
+              required
+              className="flex-1 px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-500"
+            />
+          </div>
+          {showConversion && (
+            <p className="text-xs text-gray-400 mt-1">
+              = {pcsQty} pcs
+            </p>
+          )}
         </div>
 
         <div>

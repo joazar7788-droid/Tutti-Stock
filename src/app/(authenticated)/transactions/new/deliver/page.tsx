@@ -5,8 +5,9 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { LocationPicker } from "@/components/location-picker";
 import { ItemPicker } from "@/components/item-picker";
-import { ItemCart } from "@/components/item-cart";
+import { ItemCart, type CartItem } from "@/components/item-cart";
 import { createDelivery } from "@/app/(authenticated)/transactions/actions";
+import { toPcs, formatQty } from "@/lib/unit-utils";
 import type { Location, Item } from "@/lib/database.types";
 
 type Step = "branch" | "items" | "quantities" | "review";
@@ -19,6 +20,7 @@ export default function DeliverPage() {
   const [selectedBranch, setSelectedBranch] = useState<string | null>(null);
   const [selectedItemIds, setSelectedItemIds] = useState<Set<string>>(new Set());
   const [quantities, setQuantities] = useState<Map<string, number>>(new Map());
+  const [inputUnits, setInputUnits] = useState<Map<string, "boxes" | "pcs">>(new Map());
   const [note, setNote] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -37,13 +39,17 @@ export default function DeliverPage() {
 
   const selectedBranchName = locations.find((l) => l.id === selectedBranch)?.name;
 
-  const cartItems = Array.from(selectedItemIds)
+  const cartItems: CartItem[] = Array.from(selectedItemIds)
     .map((id) => {
       const item = items.find((i) => i.id === id);
       if (!item) return null;
-      return { item, qty: quantities.get(id) ?? 1 };
+      return {
+        item,
+        qty: quantities.get(id) ?? 1,
+        inputUnit: inputUnits.get(id) ?? item.base_unit,
+      };
     })
-    .filter(Boolean) as Array<{ item: Item; qty: number }>;
+    .filter(Boolean) as CartItem[];
 
   function handleToggleItem(itemId: string) {
     setSelectedItemIds((prev) => {
@@ -51,9 +57,12 @@ export default function DeliverPage() {
       if (next.has(itemId)) {
         next.delete(itemId);
         quantities.delete(itemId);
+        inputUnits.delete(itemId);
       } else {
         next.add(itemId);
         quantities.set(itemId, 1);
+        const item = items.find((i) => i.id === itemId);
+        if (item) inputUnits.set(itemId, item.base_unit);
       }
       return next;
     });
@@ -63,6 +72,10 @@ export default function DeliverPage() {
     setQuantities((prev) => new Map(prev).set(itemId, qty));
   }
 
+  function handleUpdateUnit(itemId: string, unit: "boxes" | "pcs") {
+    setInputUnits((prev) => new Map(prev).set(itemId, unit));
+  }
+
   function handleRemove(itemId: string) {
     setSelectedItemIds((prev) => {
       const next = new Set(prev);
@@ -70,6 +83,11 @@ export default function DeliverPage() {
       return next;
     });
     setQuantities((prev) => {
+      const next = new Map(prev);
+      next.delete(itemId);
+      return next;
+    });
+    setInputUnits((prev) => {
       const next = new Map(prev);
       next.delete(itemId);
       return next;
@@ -84,7 +102,10 @@ export default function DeliverPage() {
 
     const result = await createDelivery({
       toLocationId: selectedBranch,
-      items: cartItems.map((ci) => ({ itemId: ci.item.id, qty: ci.qty })),
+      items: cartItems.map((ci) => ({
+        itemId: ci.item.id,
+        qty: toPcs(ci.qty, ci.inputUnit, ci.item.pcs_per_box),
+      })),
       note: note || undefined,
     });
 
@@ -114,6 +135,7 @@ export default function DeliverPage() {
               setSelectedBranch(null);
               setSelectedItemIds(new Set());
               setQuantities(new Map());
+              setInputUnits(new Map());
               setNote("");
             }}
             className="px-6 py-3 bg-brand-600 text-white font-semibold rounded-xl hover:bg-brand-700"
@@ -219,6 +241,7 @@ export default function DeliverPage() {
           <ItemCart
             cartItems={cartItems}
             onUpdateQty={handleUpdateQty}
+            onUpdateUnit={handleUpdateUnit}
             onRemove={handleRemove}
           />
           <div>
@@ -265,14 +288,23 @@ export default function DeliverPage() {
           </div>
 
           <div className="bg-white rounded-xl border border-gray-200 divide-y divide-gray-100">
-            {cartItems.map(({ item, qty }) => (
-              <div key={item.id} className="px-4 py-3 flex justify-between">
-                <span>{item.name}</span>
-                <span className="font-semibold">
-                  {qty} {item.unit}
-                </span>
-              </div>
-            ))}
+            {cartItems.map(({ item, qty, inputUnit }) => {
+              const pcsQty = toPcs(qty, inputUnit, item.pcs_per_box);
+              const showConversion = inputUnit === "boxes" && item.pcs_per_box > 1;
+              return (
+                <div key={item.id} className="px-4 py-3 flex justify-between">
+                  <span>{item.name}</span>
+                  <span className="font-semibold">
+                    {qty} {inputUnit}
+                    {showConversion && (
+                      <span className="text-xs text-gray-400 ml-1">
+                        ({pcsQty} pcs)
+                      </span>
+                    )}
+                  </span>
+                </div>
+              );
+            })}
           </div>
 
           <div className="flex gap-3">

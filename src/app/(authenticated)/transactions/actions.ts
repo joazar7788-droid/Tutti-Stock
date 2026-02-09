@@ -39,6 +39,7 @@ export async function createDelivery(data: {
   if (error) return { error: error.message };
 
   revalidatePath("/inventory");
+  revalidatePath("/deliveries");
   revalidatePath("/dashboard");
   return { success: true };
 }

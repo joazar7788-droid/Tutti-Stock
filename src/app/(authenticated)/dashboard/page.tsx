@@ -28,9 +28,16 @@ const staffActions = [
   {
     href: "/inventory",
     label: "View Inventory",
-    description: "See current stock levels across all locations",
+    description: "See current warehouse stock levels",
     icon: "📊",
     color: "bg-purple-50 border-purple-200 hover:bg-purple-100",
+  },
+  {
+    href: "/deliveries",
+    label: "View Deliveries",
+    description: "See delivery history to branches",
+    icon: "📋",
+    color: "bg-indigo-50 border-indigo-200 hover:bg-indigo-100",
   },
   {
     href: "/items/new",
