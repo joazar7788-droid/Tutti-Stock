@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { Item } from "@/lib/database.types";
+import { CategoryTag } from "@/components/category-tag";
 
 export function ItemPicker({
   items,
@@ -55,10 +56,13 @@ export function ItemPicker({
                 <div className="flex items-center gap-2">
                   {item.is_favorite && <span className="text-yellow-500">★</span>}
                   <span className="font-medium">{item.name}</span>
+                  <CategoryTag category={item.category} />
                 </div>
-                <div className="text-sm text-gray-500">
-                  {item.sku} · {item.category} · {item.base_unit}{item.pcs_per_box > 1 ? ` (${item.pcs_per_box} pcs/box)` : ""}
-                </div>
+                {item.pcs_per_box > 1 && (
+                  <div className="text-xs text-gray-400 mt-0.5">
+                    {item.pcs_per_box} per box
+                  </div>
+                )}
               </div>
               <div
                 className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
