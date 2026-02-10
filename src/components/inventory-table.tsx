@@ -3,6 +3,28 @@
 import type { InventoryLevel } from "@/lib/database.types";
 import { formatQty } from "@/lib/unit-utils";
 
+const CATEGORY_CONFIG: Record<string, { label: string; className: string }> = {
+  Powders: { label: "Powder", className: "bg-purple-100 text-purple-700" },
+  "Ingredient Syrups": { label: "Syrup", className: "bg-blue-100 text-blue-700" },
+  Toppings: { label: "Topping", className: "bg-emerald-100 text-emerald-700" },
+  "Topping Sauces": { label: "Sauce", className: "bg-amber-100 text-amber-700" },
+  Bobas: { label: "Boba", className: "bg-pink-100 text-pink-700" },
+  Containers: { label: "Container", className: "bg-slate-100 text-slate-600" },
+};
+
+function CategoryTag({ category }: { category: string | null }) {
+  if (!category) return null;
+  const config = CATEGORY_CONFIG[category];
+  if (!config) return null;
+  return (
+    <span
+      className={`inline-block px-1.5 py-0.5 text-[10px] font-medium rounded-full ${config.className}`}
+    >
+      {config.label}
+    </span>
+  );
+}
+
 export function InventoryTable({
   inventory,
 }: {
@@ -76,14 +98,16 @@ export function InventoryTable({
               return (
                 <tr key={item.item_id} className="border-b border-gray-100 hover:bg-gray-50">
                   <td className="py-3 px-3">
-                    <div className="flex items-center gap-1.5">
+                    <div className="flex items-center gap-2">
                       {item.is_favorite && <span className="text-yellow-500 text-xs">★</span>}
                       <span className="font-medium">{item.item_name}</span>
+                      <CategoryTag category={item.category} />
                     </div>
-                    <div className="text-xs text-gray-400">
-                      {item.sku} · {item.base_unit}
-                      {item.pcs_per_box > 1 && ` (${item.pcs_per_box} pcs/box)`}
-                    </div>
+                    {item.pcs_per_box > 1 && (
+                      <div className="text-xs text-gray-400 mt-0.5">
+                        {item.pcs_per_box} per box
+                      </div>
+                    )}
                   </td>
                   <td
                     className={`text-right py-3 px-3 font-mono ${
@@ -127,13 +151,16 @@ export function InventoryTable({
             >
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="flex items-center gap-1.5">
+                  <div className="flex items-center gap-2">
                     {item.is_favorite && <span className="text-yellow-500">★</span>}
                     <span className="font-semibold">{item.item_name}</span>
+                    <CategoryTag category={item.category} />
                   </div>
-                  <div className="text-xs text-gray-400">
-                    {item.sku} · {item.category}
-                  </div>
+                  {item.pcs_per_box > 1 && (
+                    <div className="text-xs text-gray-400 mt-0.5">
+                      {item.pcs_per_box} per box
+                    </div>
+                  )}
                 </div>
                 <div className="text-right">
                   <div
