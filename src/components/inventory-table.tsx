@@ -16,6 +16,7 @@ export function InventoryTable({
       item_name: string;
       sku: string;
       category: string | null;
+      unit: string;
       base_unit: "boxes" | "pcs";
       pcs_per_box: number;
       reorder_point: number;
@@ -30,6 +31,7 @@ export function InventoryTable({
       item_name: row.item_name,
       sku: row.sku,
       category: row.category,
+      unit: row.unit,
       base_unit: row.base_unit,
       pcs_per_box: row.pcs_per_box,
       reorder_point: row.reorder_point,
@@ -95,7 +97,7 @@ export function InventoryTable({
                     }`}
                   >
                     <span className="flex items-center justify-end gap-1.5">
-                      {formatQty(item.on_hand, item.base_unit, item.pcs_per_box)}
+                      {formatQty(item.on_hand, item.base_unit, item.pcs_per_box, item.unit)}
                       {isLow && item.on_hand > 0 && (
                         <span className="inline-block px-1.5 py-0.5 text-[10px] font-bold bg-danger-100 text-danger-700 rounded">
                           LOW
@@ -143,7 +145,7 @@ export function InventoryTable({
                         : ""
                     }`}
                   >
-                    {formatQty(item.on_hand, item.base_unit, item.pcs_per_box)}
+                    {formatQty(item.on_hand, item.base_unit, item.pcs_per_box, item.unit)}
                   </div>
                   {isLow && (
                     <span className="px-2 py-0.5 text-xs font-bold bg-danger-100 text-danger-700 rounded-lg">

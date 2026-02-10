@@ -101,10 +101,10 @@ export default function ReportsPage() {
                 </div>
                 <div className="text-right">
                   <div className="text-danger-700 font-bold">
-                    {formatQty(item.on_hand, item.base_unit, item.pcs_per_box)}
+                    {formatQty(item.on_hand, item.base_unit, item.pcs_per_box, item.unit)}
                   </div>
                   <div className="text-xs text-gray-400">
-                    Reorder at {formatQty(item.reorder_point, item.base_unit, item.pcs_per_box)}
+                    Reorder at {formatQty(item.reorder_point, item.base_unit, item.pcs_per_box, item.unit)}
                   </div>
                 </div>
               </div>
@@ -140,10 +140,10 @@ export default function ReportsPage() {
                       : ""
                   }`}
                 >
-                  {formatQty(item.on_hand, item.base_unit, item.pcs_per_box)}
+                  {formatQty(item.on_hand, item.base_unit, item.pcs_per_box, item.unit)}
                 </div>
                 <div className="text-xs text-gray-400">
-                  Target: {formatQty(item.target_stock, item.base_unit, item.pcs_per_box)}
+                  Target: {formatQty(item.target_stock, item.base_unit, item.pcs_per_box, item.unit)}
                 </div>
               </div>
             </div>

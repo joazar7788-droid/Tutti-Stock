@@ -47,10 +47,14 @@ export function displayQty(
 export function formatQty(
   pcsQty: number,
   baseUnit: BaseUnit,
-  pcsPerBox: number
+  pcsPerBox: number,
+  unitLabel?: string
 ): string {
-  if (baseUnit === "pcs" || pcsPerBox <= 1) {
-    return `${pcsQty} pcs`;
+  if (baseUnit === "pcs") {
+    return `${pcsQty} ${unitLabel || "pcs"}`;
+  }
+  if (pcsPerBox <= 1) {
+    return `${pcsQty} ${pcsQty === 1 ? "box" : "boxes"}`;
   }
   const boxes = Math.floor(pcsQty / pcsPerBox);
   const remainder = pcsQty % pcsPerBox;
