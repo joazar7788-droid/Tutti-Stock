@@ -220,7 +220,7 @@ export default function DeliverPage() {
               onClick={() => setStep("quantities")}
               className="w-full py-3 bg-brand-600 text-white font-semibold rounded-xl hover:bg-brand-700"
             >
-              Set Quantities ({selectedItemIds.size} items)
+              Set Quantity for Delivery ({selectedItemIds.size} items)
             </button>
           )}
         </div>
@@ -230,7 +230,7 @@ export default function DeliverPage() {
       {step === "quantities" && (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold">Set quantities</h2>
+            <h2 className="text-lg font-semibold">Set quantity for delivery</h2>
             <button
               onClick={() => setStep("items")}
               className="text-sm text-brand-600 font-medium"
