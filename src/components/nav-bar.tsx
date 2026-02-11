@@ -10,7 +10,7 @@ const navLinks = [
   { href: "/dashboard", label: "Dashboard" },
   { href: "/transactions/new", label: "New Transaction" },
   { href: "/inventory", label: "Inventory" },
-  { href: "/deliveries", label: "Deliveries" },
+  { href: "/deliveries", label: "Activity" },
   { href: "/items", label: "Manage Items" },
 ];
 

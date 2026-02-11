@@ -1,4 +1,4 @@
-const CATEGORY_CONFIG: Record<string, { label: string; className: string }> = {
+export const CATEGORY_CONFIG: Record<string, { label: string; className: string }> = {
   Powders: { label: "Powder", className: "bg-purple-100 text-purple-700" },
   "Ingredient Syrups": { label: "Syrup", className: "bg-blue-100 text-blue-700" },
   Toppings: { label: "Topping", className: "bg-emerald-100 text-emerald-700" },
@@ -13,7 +13,7 @@ export function CategoryTag({ category }: { category: string | null }) {
   if (!config) return null;
   return (
     <span
-      className={`inline-block px-1.5 py-0.5 text-[10px] font-medium rounded-full ${config.className}`}
+      className={`inline-block px-2 py-0.5 text-xs font-medium rounded-full ${config.className}`}
     >
       {config.label}
     </span>

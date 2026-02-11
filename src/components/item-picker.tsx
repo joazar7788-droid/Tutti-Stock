@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import type { Item } from "@/lib/database.types";
-import { CategoryTag } from "@/components/category-tag";
+import { CategoryTag, CATEGORY_CONFIG } from "@/components/category-tag";
 
 export function ItemPicker({
   items,
@@ -14,13 +14,28 @@ export function ItemPicker({
   onToggle: (itemId: string) => void;
 }) {
   const [search, setSearch] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
-  const filtered = items.filter(
-    (item) =>
-      item.name.toLowerCase().includes(search.toLowerCase()) ||
-      item.sku.toLowerCase().includes(search.toLowerCase()) ||
-      (item.category?.toLowerCase().includes(search.toLowerCase()) ?? false)
-  );
+  // Get unique categories from items, ordered by CATEGORY_CONFIG
+  const categories = useMemo(() => {
+    const cats = new Set(items.map((i) => i.category).filter(Boolean) as string[]);
+    return Object.keys(CATEGORY_CONFIG).filter((c) => cats.has(c));
+  }, [items]);
+
+  const filtered = items.filter((item) => {
+    // Category filter
+    if (selectedCategory && item.category !== selectedCategory) return false;
+    // Text search
+    if (search) {
+      const q = search.toLowerCase();
+      return (
+        item.name.toLowerCase().includes(q) ||
+        item.sku.toLowerCase().includes(q) ||
+        (item.category?.toLowerCase().includes(q) ?? false)
+      );
+    }
+    return true;
+  });
 
   // Sort: favorites first, then alphabetically
   const sorted = [...filtered].sort((a, b) => {
@@ -31,6 +46,39 @@ export function ItemPicker({
 
   return (
     <div className="space-y-3">
+      {/* Category filter pills */}
+      <div className="flex gap-2 overflow-x-auto pb-1">
+        <button
+          type="button"
+          onClick={() => setSelectedCategory(null)}
+          className={`px-3 py-1.5 text-xs font-medium rounded-full whitespace-nowrap transition-colors ${
+            selectedCategory === null
+              ? "bg-gray-800 text-white"
+              : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+          }`}
+        >
+          All
+        </button>
+        {categories.map((cat) => {
+          const config = CATEGORY_CONFIG[cat];
+          const isActive = selectedCategory === cat;
+          return (
+            <button
+              key={cat}
+              type="button"
+              onClick={() => setSelectedCategory(isActive ? null : cat)}
+              className={`px-3 py-1.5 text-xs font-medium rounded-full whitespace-nowrap transition-colors ${
+                isActive
+                  ? config.className
+                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+              }`}
+            >
+              {config.label}
+            </button>
+          );
+        })}
+      </div>
+
       <input
         type="text"
         value={search}

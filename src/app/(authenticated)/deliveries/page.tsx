@@ -6,44 +6,45 @@ import {
 } from "@/components/deliveries-summary";
 import {
   DeliveriesList,
-  type DeliveryTransaction,
+  type ActivityTransaction,
 } from "@/components/deliveries-list";
 
-export default async function DeliveriesPage({
+export default async function ActivityPage({
   searchParams,
 }: {
-  searchParams: Promise<{ branch?: string; from?: string; to?: string }>;
+  searchParams: Promise<{ branch?: string; from?: string; to?: string; type?: string }>;
 }) {
   const params = await searchParams;
   const supabase = await createClient();
 
-  // Get warehouse ID
-  const { data: warehouse } = await supabase
+  // Get locations for filter dropdown and enrichment
+  const { data: allLocations } = await supabase
     .from("locations")
-    .select("id")
-    .eq("type", "warehouse")
-    .single();
-
-  // Get branches for filter dropdown
-  const { data: branches } = await supabase
-    .from("locations")
-    .select("id, name")
-    .eq("type", "branch")
+    .select("id, name, type")
     .eq("is_active", true)
     .order("name");
 
-  // Fetch TRANSFER transactions from warehouse
+  const branches = (allLocations ?? []).filter((l) => l.type === "branch");
+  const locationMap = new Map(
+    (allLocations ?? []).map((l) => [l.id, l])
+  );
+
+  // Fetch transactions (all types or filtered)
   let query = supabase
     .from("transactions")
-    .select("id, created_at, item_id, to_location_id, qty, note")
-    .eq("transaction_type", "TRANSFER")
+    .select("id, created_at, transaction_type, item_id, from_location_id, to_location_id, qty, note, reason")
     .order("created_at", { ascending: false });
 
-  if (warehouse) {
-    query = query.eq("from_location_id", warehouse.id);
+  if (params.type === "TRANSFER") {
+    query = query.eq("transaction_type", "TRANSFER");
+  } else if (params.type === "RECEIVE") {
+    query = query.eq("transaction_type", "RECEIVE");
+  } else if (params.type === "ADJUST") {
+    query = query.eq("transaction_type", "ADJUST");
   }
+
   if (params.branch) {
-    query = query.eq("to_location_id", params.branch);
+    query = query.or(`to_location_id.eq.${params.branch},from_location_id.eq.${params.branch}`);
   }
   if (params.from) {
     query = query.gte("created_at", params.from);
@@ -54,30 +55,25 @@ export default async function DeliveriesPage({
 
   const { data: transactions } = await query;
 
-  // Fetch items and locations for enrichment
+  // Fetch items for enrichment
   const { data: allItems } = await supabase
     .from("items")
     .select("id, name, sku, base_unit, pcs_per_box");
 
-  const { data: allLocations } = await supabase
-    .from("locations")
-    .select("id, name");
-
   const itemMap = new Map(
     (allItems ?? []).map((i) => [i.id, i])
   );
-  const locationMap = new Map(
-    (allLocations ?? []).map((l) => [l.id, l])
-  );
 
-  // Build aggregated totals
+  // Build aggregated totals and list
   const aggMap = new Map<string, AggregatedDelivery>();
-  const deliveryList: DeliveryTransaction[] = [];
+  const activityList: ActivityTransaction[] = [];
 
   for (const tx of transactions ?? []) {
     const item = itemMap.get(tx.item_id);
-    const branch = locationMap.get(tx.to_location_id ?? "");
     if (!item) continue;
+
+    const fromLoc = locationMap.get(tx.from_location_id ?? "");
+    const toLoc = locationMap.get(tx.to_location_id ?? "");
 
     // Aggregate
     const existing = aggMap.get(tx.item_id);
@@ -94,16 +90,19 @@ export default async function DeliveriesPage({
     }
 
     // Individual list
-    deliveryList.push({
+    activityList.push({
       id: tx.id,
       created_at: tx.created_at,
+      transaction_type: tx.transaction_type as "RECEIVE" | "TRANSFER" | "ADJUST",
       item_name: item.name,
       sku: item.sku,
       base_unit: item.base_unit as "boxes" | "pcs",
       pcs_per_box: item.pcs_per_box,
       qty: tx.qty,
-      branch_name: branch?.name ?? "Unknown",
+      from_location_name: fromLoc?.name ?? null,
+      to_location_name: toLoc?.name ?? null,
       note: tx.note,
+      reason: tx.reason,
     });
   }
 
@@ -114,22 +113,23 @@ export default async function DeliveriesPage({
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Deliveries</h1>
+        <h1 className="text-2xl font-bold">Activity</h1>
         <p className="text-gray-500 mt-1">
-          Delivery history from warehouse to branches
+          All stock movements — deliveries, receipts, and adjustments
         </p>
       </div>
 
       <DeliveriesFilters
-        branches={branches ?? []}
+        branches={branches}
         currentBranch={params.branch}
         currentFrom={params.from}
         currentTo={params.to}
+        currentType={params.type}
       />
 
       <DeliveriesSummary aggregated={aggregated} />
 
-      <DeliveriesList deliveries={deliveryList} />
+      <DeliveriesList activities={activityList} />
     </div>
   );
 }

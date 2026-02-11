@@ -4,6 +4,7 @@ import type { Item } from "@/lib/database.types";
 import { QuantityInput } from "./quantity-input";
 import { UnitToggle } from "./unit-toggle";
 import { toPcs } from "@/lib/unit-utils";
+import { CategoryTag } from "./category-tag";
 
 export type CartItem = {
   item: Item;
@@ -35,9 +36,9 @@ export function ItemCart({
           >
             <div className="flex items-center justify-between gap-3">
               <div className="flex-1 min-w-0">
-                <div className="font-medium truncate">{item.name}</div>
-                <div className="text-sm text-gray-500">
-                  {item.sku}
+                <div className="flex items-center gap-2">
+                  <span className="font-medium truncate">{item.name}</span>
+                  <CategoryTag category={item.category} />
                 </div>
               </div>
               <button

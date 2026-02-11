@@ -10,11 +10,13 @@ export function DeliveriesFilters({
   currentBranch,
   currentFrom,
   currentTo,
+  currentType,
 }: {
   branches: Branch[];
   currentBranch?: string;
   currentFrom?: string;
   currentTo?: string;
+  currentType?: string;
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -35,11 +37,22 @@ export function DeliveriesFilters({
   return (
     <div className="flex flex-wrap gap-3">
       <select
+        value={currentType ?? ""}
+        onChange={(e) => updateParams("type", e.target.value)}
+        className="px-4 py-2.5 rounded-xl border border-gray-300 bg-white focus:outline-none focus:ring-2 focus:ring-brand-500"
+      >
+        <option value="">All Types</option>
+        <option value="TRANSFER">Deliveries</option>
+        <option value="RECEIVE">Received</option>
+        <option value="ADJUST">Adjustments</option>
+      </select>
+
+      <select
         value={currentBranch ?? ""}
         onChange={(e) => updateParams("branch", e.target.value)}
         className="px-4 py-2.5 rounded-xl border border-gray-300 bg-white focus:outline-none focus:ring-2 focus:ring-brand-500"
       >
-        <option value="">All Branches</option>
+        <option value="">All Locations</option>
         {branches.map((b) => (
           <option key={b.id} value={b.id}>
             {b.name}

@@ -10,7 +10,7 @@ export function UnitToggle({
   pcsPerBox: number;
 }) {
   if (pcsPerBox <= 1) {
-    return <span className="text-sm text-gray-500">pcs</span>;
+    return <span className="text-sm text-gray-500">cases</span>;
   }
 
   return (
@@ -24,7 +24,7 @@ export function UnitToggle({
             : "bg-white text-gray-600 hover:bg-gray-50"
         }`}
       >
-        boxes
+        cases
       </button>
       <button
         type="button"

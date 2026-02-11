@@ -34,8 +34,8 @@ const staffActions = [
   },
   {
     href: "/deliveries",
-    label: "View Deliveries",
-    description: "See delivery history to branches",
+    label: "View Activity",
+    description: "See all stock movements and history",
     icon: "📋",
     color: "bg-indigo-50 border-indigo-200 hover:bg-indigo-100",
   },
