@@ -46,9 +46,6 @@ const staffActions = [
     icon: "➕",
     color: "bg-teal-50 border-teal-200 hover:bg-teal-100",
   },
-];
-
-const ownerActions = [
   {
     href: "/items",
     label: "Manage Items",
@@ -56,6 +53,9 @@ const ownerActions = [
     icon: "⚙️",
     color: "bg-gray-50 border-gray-200 hover:bg-gray-100",
   },
+];
+
+const ownerActions = [
   {
     href: "/reports",
     label: "Reports",

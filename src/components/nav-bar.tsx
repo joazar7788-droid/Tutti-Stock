@@ -11,10 +11,10 @@ const navLinks = [
   { href: "/transactions/new", label: "New Transaction" },
   { href: "/inventory", label: "Inventory" },
   { href: "/deliveries", label: "Deliveries" },
+  { href: "/items", label: "Manage Items" },
 ];
 
 const ownerLinks = [
-  { href: "/items", label: "Manage Items" },
   { href: "/reports", label: "Reports" },
 ];
 

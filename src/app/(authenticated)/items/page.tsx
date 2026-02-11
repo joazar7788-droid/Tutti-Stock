@@ -9,16 +9,6 @@ export default async function ItemsPage() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  let isOwner = false;
-  if (user) {
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", user.id)
-      .single();
-    isOwner = profile?.role === "owner";
-  }
-
   const { data: items } = await supabase
     .from("items")
     .select("*")
@@ -48,7 +38,7 @@ export default async function ItemsPage() {
 
       <div className="bg-white rounded-xl border border-gray-200 divide-y divide-gray-100">
         {sorted.map((item) => (
-          <ItemRow key={item.id} item={item} isOwner={isOwner} />
+          <ItemRow key={item.id} item={item} />
         ))}
         {sorted.length === 0 && (
           <div className="p-8 text-center text-gray-400">

@@ -4,7 +4,7 @@ import Link from "next/link";
 import type { Item } from "@/lib/database.types";
 import { toggleItemActive, toggleItemFavorite } from "@/app/(authenticated)/items/actions";
 
-export function ItemRow({ item, isOwner }: { item: Item; isOwner: boolean }) {
+export function ItemRow({ item }: { item: Item }) {
   return (
     <div
       className={`p-4 flex items-center gap-4 ${
@@ -32,26 +32,22 @@ export function ItemRow({ item, isOwner }: { item: Item; isOwner: boolean }) {
       </div>
 
       <div className="flex items-center gap-2 shrink-0">
-        {isOwner && (
-          <>
-            <Link
-              href={`/items/${item.id}/edit`}
-              className="px-3 py-1.5 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
-            >
-              Edit
-            </Link>
-            <button
-              onClick={() => toggleItemActive(item.id, !item.is_active)}
-              className={`px-3 py-1.5 text-sm rounded-lg ${
-                item.is_active
-                  ? "bg-danger-50 text-danger-700 hover:bg-danger-100"
-                  : "bg-success-50 text-success-600 hover:bg-green-100"
-              }`}
-            >
-              {item.is_active ? "Deactivate" : "Activate"}
-            </button>
-          </>
-        )}
+        <Link
+          href={`/items/${item.id}/edit`}
+          className="px-3 py-1.5 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
+        >
+          Edit
+        </Link>
+        <button
+          onClick={() => toggleItemActive(item.id, !item.is_active)}
+          className={`px-3 py-1.5 text-sm rounded-lg ${
+            item.is_active
+              ? "bg-danger-50 text-danger-700 hover:bg-danger-100"
+              : "bg-success-50 text-success-600 hover:bg-green-100"
+          }`}
+        >
+          {item.is_active ? "Deactivate" : "Activate"}
+        </button>
       </div>
     </div>
   );
