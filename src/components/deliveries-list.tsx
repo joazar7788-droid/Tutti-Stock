@@ -1,20 +1,20 @@
 "use client";
 
+import { useState } from "react";
 import { formatQty } from "@/lib/unit-utils";
 
-export type ActivityTransaction = {
-  id: string;
-  created_at: string;
-  transaction_type: "RECEIVE" | "TRANSFER" | "ADJUST";
-  item_name: string;
-  sku: string;
-  base_unit: "boxes" | "pcs";
-  pcs_per_box: number;
-  qty: number; // in pcs
-  from_location_name: string | null;
-  to_location_name: string | null;
-  note: string | null;
-  reason: string | null;
+export type ActivityGroup = {
+  key: string;
+  title: string;
+  type: "RECEIVE" | "TRANSFER" | "ADJUST";
+  date: string;
+  items: {
+    item_name: string;
+    qty: number;
+    base_unit: "boxes" | "pcs";
+    pcs_per_box: number;
+    note: string | null;
+  }[];
 };
 
 const TYPE_CONFIG = {
@@ -23,7 +23,7 @@ const TYPE_CONFIG = {
   ADJUST: { label: "Adjustment", className: "bg-amber-100 text-amber-700" },
 };
 
-function TypeBadge({ type }: { type: ActivityTransaction["transaction_type"] }) {
+function TypeBadge({ type }: { type: ActivityGroup["type"] }) {
   const config = TYPE_CONFIG[type];
   return (
     <span className={`inline-block px-2 py-0.5 text-xs font-medium rounded-full ${config.className}`}>
@@ -32,76 +32,88 @@ function TypeBadge({ type }: { type: ActivityTransaction["transaction_type"] }) 
   );
 }
 
-function ActivityDetail({ tx }: { tx: ActivityTransaction }) {
-  switch (tx.transaction_type) {
-    case "TRANSFER":
-      return <span>→ {tx.to_location_name}</span>;
-    case "RECEIVE":
-      return <span>→ {tx.to_location_name}</span>;
-    case "ADJUST":
-      return (
-        <span>
-          {tx.to_location_name ? `+ ${tx.to_location_name}` : `- ${tx.from_location_name}`}
-          {tx.reason && <> · {tx.reason}</>}
-        </span>
-      );
-  }
+function ChevronIcon({ open }: { open: boolean }) {
+  return (
+    <svg
+      className={`w-5 h-5 text-gray-400 transition-transform ${open ? "rotate-180" : ""}`}
+      fill="none"
+      viewBox="0 0 24 24"
+      strokeWidth={2}
+      stroke="currentColor"
+    >
+      <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+    </svg>
+  );
 }
 
-export function DeliveriesList({
-  activities,
-}: {
-  activities: ActivityTransaction[];
-}) {
-  if (activities.length === 0) return null;
+export function DeliveriesList({ groups }: { groups: ActivityGroup[] }) {
+  const [openKeys, setOpenKeys] = useState<Set<string>>(new Set());
 
-  // Group by date
-  const byDate = new Map<string, ActivityTransaction[]>();
-  for (const tx of activities) {
-    const date = new Date(tx.created_at).toLocaleDateString("en-US", {
-      weekday: "short",
-      year: "numeric",
-      month: "short",
-      day: "numeric",
+  if (groups.length === 0) {
+    return (
+      <div className="text-center py-8 text-gray-400">
+        No activity found for this period
+      </div>
+    );
+  }
+
+  function toggle(key: string) {
+    setOpenKeys((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) {
+        next.delete(key);
+      } else {
+        next.add(key);
+      }
+      return next;
     });
-    if (!byDate.has(date)) byDate.set(date, []);
-    byDate.get(date)!.push(tx);
   }
 
   return (
-    <div>
-      <h2 className="text-lg font-semibold mb-3">History</h2>
-      <div className="space-y-4">
-        {Array.from(byDate.entries()).map(([date, txns]) => (
-          <div key={date}>
-            <h3 className="text-sm font-medium text-gray-500 mb-2">{date}</h3>
-            <div className="bg-white rounded-xl border border-gray-200 divide-y divide-gray-100">
-              {txns.map((tx) => (
-                <div key={tx.id} className="px-4 py-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium">{tx.item_name}</span>
-                      <TypeBadge type={tx.transaction_type} />
-                    </div>
-                    <span className="font-mono font-semibold">
-                      {formatQty(tx.qty, tx.base_unit, tx.pcs_per_box)}
+    <div className="space-y-3">
+      {groups.map((group) => {
+        const isOpen = openKeys.has(group.key);
+        const dateStr = new Date(group.date).toLocaleDateString("en-US", {
+          weekday: "short",
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+        });
+
+        return (
+          <div key={group.key} className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+            <button
+              onClick={() => toggle(group.key)}
+              className="w-full px-4 py-3 flex items-center justify-between text-left hover:bg-gray-50 transition-colors"
+            >
+              <div className="flex items-center gap-2 min-w-0">
+                <TypeBadge type={group.type} />
+                <span className="font-medium truncate">{group.title}</span>
+              </div>
+              <div className="flex items-center gap-3 shrink-0 ml-3">
+                <span className="text-xs text-gray-400">{dateStr}</span>
+                <span className="text-xs text-gray-500 font-medium">
+                  {group.items.length} {group.items.length === 1 ? "item" : "items"}
+                </span>
+                <ChevronIcon open={isOpen} />
+              </div>
+            </button>
+
+            {isOpen && (
+              <div className="border-t border-gray-100 divide-y divide-gray-100">
+                {group.items.map((item, i) => (
+                  <div key={i} className="px-4 py-2.5 flex items-center justify-between">
+                    <span className="text-sm">{item.item_name}</span>
+                    <span className="text-sm font-mono font-semibold">
+                      {formatQty(item.qty, item.base_unit, item.pcs_per_box)}
                     </span>
                   </div>
-                  <div className="flex items-center gap-2 mt-1 text-xs text-gray-400">
-                    <ActivityDetail tx={tx} />
-                    {tx.note && (
-                      <>
-                        <span>·</span>
-                        <span>{tx.note}</span>
-                      </>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
-        ))}
-      </div>
+        );
+      })}
     </div>
   );
 }

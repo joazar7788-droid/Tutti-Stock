@@ -1,12 +1,8 @@
 import { createClient } from "@/lib/supabase/server";
 import { DeliveriesFilters } from "@/components/deliveries-filters";
 import {
-  DeliveriesSummary,
-  type AggregatedDelivery,
-} from "@/components/deliveries-summary";
-import {
   DeliveriesList,
-  type ActivityTransaction,
+  type ActivityGroup,
 } from "@/components/deliveries-list";
 
 export default async function ActivityPage({
@@ -64,51 +60,51 @@ export default async function ActivityPage({
     (allItems ?? []).map((i) => [i.id, i])
   );
 
-  // Build aggregated totals and list
-  const aggMap = new Map<string, AggregatedDelivery>();
-  const activityList: ActivityTransaction[] = [];
+  // Group transactions into batches
+  const groupMap = new Map<string, ActivityGroup>();
 
   for (const tx of transactions ?? []) {
     const item = itemMap.get(tx.item_id);
     if (!item) continue;
 
-    const fromLoc = locationMap.get(tx.from_location_id ?? "");
-    const toLoc = locationMap.get(tx.to_location_id ?? "");
+    const key = `${tx.created_at}|${tx.transaction_type}|${tx.from_location_id ?? ""}|${tx.to_location_id ?? ""}`;
 
-    // Aggregate
-    const existing = aggMap.get(tx.item_id);
-    if (existing) {
-      existing.total_qty += tx.qty;
-    } else {
-      aggMap.set(tx.item_id, {
-        item_name: item.name,
-        sku: item.sku,
-        base_unit: item.base_unit as "boxes" | "pcs",
-        pcs_per_box: item.pcs_per_box,
-        total_qty: tx.qty,
+    if (!groupMap.has(key)) {
+      const fromLoc = locationMap.get(tx.from_location_id ?? "");
+      const toLoc = locationMap.get(tx.to_location_id ?? "");
+      const type = tx.transaction_type as "RECEIVE" | "TRANSFER" | "ADJUST";
+
+      let title: string;
+      if (type === "TRANSFER") {
+        title = `Delivery to ${toLoc?.name ?? "Unknown"}`;
+      } else if (type === "RECEIVE") {
+        title = `Received at ${toLoc?.name ?? "Unknown"}`;
+      } else if (tx.reason) {
+        title = tx.reason;
+      } else {
+        const locName = toLoc?.name ?? fromLoc?.name ?? "Unknown";
+        title = `Adjustment at ${locName}`;
+      }
+
+      groupMap.set(key, {
+        key,
+        title,
+        type,
+        date: tx.created_at,
+        items: [],
       });
     }
 
-    // Individual list
-    activityList.push({
-      id: tx.id,
-      created_at: tx.created_at,
-      transaction_type: tx.transaction_type as "RECEIVE" | "TRANSFER" | "ADJUST",
+    groupMap.get(key)!.items.push({
       item_name: item.name,
-      sku: item.sku,
+      qty: tx.qty,
       base_unit: item.base_unit as "boxes" | "pcs",
       pcs_per_box: item.pcs_per_box,
-      qty: tx.qty,
-      from_location_name: fromLoc?.name ?? null,
-      to_location_name: toLoc?.name ?? null,
       note: tx.note,
-      reason: tx.reason,
     });
   }
 
-  const aggregated = Array.from(aggMap.values()).sort((a, b) =>
-    a.item_name.localeCompare(b.item_name)
-  );
+  const groups = Array.from(groupMap.values());
 
   return (
     <div className="space-y-6">
@@ -127,9 +123,7 @@ export default async function ActivityPage({
         currentType={params.type}
       />
 
-      <DeliveriesSummary aggregated={aggregated} />
-
-      <DeliveriesList activities={activityList} />
+      <DeliveriesList groups={groups} />
     </div>
   );
 }
