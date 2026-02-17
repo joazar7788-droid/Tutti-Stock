@@ -3,7 +3,7 @@
 import { useEffect, useState, useMemo } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { CategoryTag, CATEGORY_CONFIG } from "@/components/category-tag";
-import { toPcs, formatQty } from "@/lib/unit-utils";
+import { formatQty } from "@/lib/unit-utils";
 import { isCountDay, getRecentSunday, toISODate } from "@/lib/date-utils";
 import { submitStockCount } from "./actions";
 import { signOut } from "@/app/login/actions";
@@ -17,7 +17,8 @@ export default function CountPage() {
   const [items, setItems] = useState<Item[]>([]);
   const [selectedBranch, setSelectedBranch] = useState<string | null>(null);
   const [counterName, setCounterName] = useState("");
-  const [quantities, setQuantities] = useState<Map<string, number>>(new Map());
+  const [caseQty, setCaseQty] = useState<Map<string, number>>(new Map());
+  const [looseQty, setLooseQty] = useState<Map<string, number>>(new Map());
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -66,10 +67,11 @@ export default function CountPage() {
 
   const itemsWithQty = useMemo(() => {
     return items.filter((item) => {
-      const qty = quantities.get(item.id);
-      return qty !== undefined && qty > 0;
+      const cases = caseQty.get(item.id) ?? 0;
+      const loose = looseQty.get(item.id) ?? 0;
+      return cases > 0 || loose > 0;
     });
-  }, [items, quantities]);
+  }, [items, caseQty, looseQty]);
 
   // Group items by category for review
   const reviewGroups = useMemo(() => {
@@ -82,9 +84,13 @@ export default function CountPage() {
     return groups;
   }, [itemsWithQty]);
 
-  function handleQtyChange(itemId: string, value: string) {
+  function handleMapChange(
+    setter: typeof setCaseQty,
+    itemId: string,
+    value: string
+  ) {
     const num = parseInt(value, 10);
-    setQuantities((prev) => {
+    setter((prev) => {
       const next = new Map(prev);
       if (isNaN(num) || value === "") {
         next.delete(itemId);
@@ -103,9 +109,13 @@ export default function CountPage() {
 
     const weekOf = toISODate(getRecentSunday(new Date()));
     const allItems = items.map((item) => {
-      const enteredQty = quantities.get(item.id) ?? 0;
-      // Convert from base unit to pcs for storage
-      const pcsQty = toPcs(enteredQty, item.base_unit, item.pcs_per_box);
+      const cases = caseQty.get(item.id) ?? 0;
+      const loose = looseQty.get(item.id) ?? 0;
+      // Convert to total pcs for storage
+      const pcsQty =
+        item.base_unit === "boxes" && item.pcs_per_box > 1
+          ? cases * item.pcs_per_box + loose
+          : cases;
       return { itemId: item.id, qty: pcsQty };
     });
 
@@ -156,7 +166,8 @@ export default function CountPage() {
               setStep("branch");
               setSelectedBranch(null);
               setCounterName("");
-              setQuantities(new Map());
+              setCaseQty(new Map());
+              setLooseQty(new Map());
               setSearch("");
               setSelectedCategory(null);
               setError(null);
@@ -309,8 +320,9 @@ export default function CountPage() {
           {/* Item list */}
           <div className="bg-white rounded-xl border border-gray-200 divide-y divide-gray-100">
             {filteredItems.map((item) => {
-              const unitLabel =
-                item.base_unit === "pcs" ? "pcs" : "cases";
+              const hasLoose =
+                item.base_unit === "boxes" && item.pcs_per_box > 1;
+              const looseLabel = item.unit || "pcs";
               return (
                 <div
                   key={item.id}
@@ -322,21 +334,43 @@ export default function CountPage() {
                     </span>
                     <CategoryTag category={item.category} />
                   </div>
-                  <div className="flex items-center gap-2 shrink-0">
+                  <div className="flex items-center gap-1.5 shrink-0">
                     <input
                       type="number"
                       inputMode="numeric"
                       min={0}
-                      value={quantities.get(item.id) ?? ""}
+                      value={caseQty.get(item.id) ?? ""}
                       onChange={(e) =>
-                        handleQtyChange(item.id, e.target.value)
+                        handleMapChange(setCaseQty, item.id, e.target.value)
                       }
                       placeholder="0"
-                      className="w-16 px-2 py-1.5 text-center rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm"
+                      className="w-14 px-2 py-1.5 text-center rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm"
                     />
-                    <span className="text-xs text-gray-400 w-10">
-                      {unitLabel}
+                    <span className="text-xs text-gray-400">
+                      {item.base_unit === "pcs" ? (item.unit || "pcs") : "cs"}
                     </span>
+                    {hasLoose && (
+                      <>
+                        <input
+                          type="number"
+                          inputMode="numeric"
+                          min={0}
+                          value={looseQty.get(item.id) ?? ""}
+                          onChange={(e) =>
+                            handleMapChange(
+                              setLooseQty,
+                              item.id,
+                              e.target.value
+                            )
+                          }
+                          placeholder="0"
+                          className="w-14 px-2 py-1.5 text-center rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm"
+                        />
+                        <span className="text-xs text-gray-400">
+                          {looseLabel}
+                        </span>
+                      </>
+                    )}
                   </div>
                 </div>
               );
@@ -385,9 +419,13 @@ export default function CountPage() {
                   </h3>
                   <div className="bg-white rounded-xl border border-gray-200 divide-y divide-gray-100">
                     {groupItems.map((item) => {
-                      const qty = quantities.get(item.id) ?? 0;
-                      const unitLabel =
-                        item.base_unit === "pcs" ? "pcs" : "cases";
+                      const cases = caseQty.get(item.id) ?? 0;
+                      const loose = looseQty.get(item.id) ?? 0;
+                      const hasLoose =
+                        item.base_unit === "boxes" && item.pcs_per_box > 1;
+                      const totalPcs = hasLoose
+                        ? cases * item.pcs_per_box + loose
+                        : cases;
                       return (
                         <div
                           key={item.id}
@@ -395,7 +433,12 @@ export default function CountPage() {
                         >
                           <span className="text-sm">{item.name}</span>
                           <span className="text-sm font-mono font-semibold">
-                            {qty} {unitLabel}
+                            {formatQty(
+                              totalPcs,
+                              item.base_unit,
+                              item.pcs_per_box,
+                              item.unit
+                            )}
                           </span>
                         </div>
                       );

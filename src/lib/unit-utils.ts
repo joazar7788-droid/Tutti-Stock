@@ -58,11 +58,12 @@ export function formatQty(
   }
   const boxes = Math.floor(pcsQty / pcsPerBox);
   const remainder = pcsQty % pcsPerBox;
+  const pcsLabel = unitLabel || "pcs";
   if (remainder === 0) {
     return `${boxes} ${boxes === 1 ? "box" : "boxes"}`;
   }
   if (boxes === 0) {
-    return `${remainder} pcs`;
+    return `${remainder} ${pcsLabel}`;
   }
-  return `${boxes} ${boxes === 1 ? "box" : "boxes"} + ${remainder} pcs`;
+  return `${boxes} ${boxes === 1 ? "box" : "boxes"} + ${remainder} ${pcsLabel}`;
 }
