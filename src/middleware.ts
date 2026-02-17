@@ -29,18 +29,45 @@ export async function middleware(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
+  const pathname = request.nextUrl.pathname;
+
   // Redirect unauthenticated users to login
-  if (!user && !request.nextUrl.pathname.startsWith("/login")) {
+  if (!user && !pathname.startsWith("/login")) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     return NextResponse.redirect(url);
   }
 
-  // Redirect authenticated users away from login
-  if (user && request.nextUrl.pathname.startsWith("/login")) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/dashboard";
-    return NextResponse.redirect(url);
+  // Role-based routing for authenticated users
+  if (user) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .single();
+
+    const role = profile?.role;
+
+    // Counter users: redirect to /count from any non-counter page
+    if (role === "counter" && !pathname.startsWith("/count") && !pathname.startsWith("/login")) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/count";
+      return NextResponse.redirect(url);
+    }
+
+    // Non-counter users: redirect away from /count
+    if (role !== "counter" && pathname.startsWith("/count")) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/dashboard";
+      return NextResponse.redirect(url);
+    }
+
+    // Authenticated users on login page: redirect based on role
+    if (pathname.startsWith("/login")) {
+      const url = request.nextUrl.clone();
+      url.pathname = role === "counter" ? "/count" : "/dashboard";
+      return NextResponse.redirect(url);
+    }
   }
 
   return supabaseResponse;

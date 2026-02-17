@@ -33,6 +33,13 @@ const staffActions = [
     color: "bg-purple-50 border-purple-200 hover:bg-purple-100",
   },
   {
+    href: "/branch-counts",
+    label: "Branch Counts",
+    description: "View weekly stock counts from branches",
+    icon: "📝",
+    color: "bg-cyan-50 border-cyan-200 hover:bg-cyan-100",
+  },
+  {
     href: "/deliveries",
     label: "View Activity",
     description: "See all stock movements and history",

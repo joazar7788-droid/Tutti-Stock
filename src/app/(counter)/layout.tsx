@@ -1,10 +1,9 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { UserProvider } from "@/lib/context/user-context";
-import { NavBar } from "@/components/nav-bar";
-import { OfflineBanner } from "@/components/offline-banner";
+import { SignOutButton } from "./sign-out-button";
 
-export default async function AuthenticatedLayout({
+export default async function CounterLayout({
   children,
 }: {
   children: React.ReactNode;
@@ -40,9 +39,11 @@ export default async function AuthenticatedLayout({
       }}
     >
       <div className="min-h-dvh flex flex-col">
-        <NavBar />
-        <OfflineBanner />
-        <main className="flex-1 p-4 max-w-7xl mx-auto w-full">
+        <header className="border-b border-gray-200 bg-white px-4 py-3 flex items-center justify-between">
+          <h1 className="text-lg font-bold text-brand-600">Tutti Stock Count</h1>
+          <SignOutButton />
+        </header>
+        <main className="flex-1 p-4 max-w-2xl mx-auto w-full">
           {children}
         </main>
       </div>

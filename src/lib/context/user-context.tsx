@@ -8,6 +8,7 @@ type UserContextType = {
   email: string;
   profile: Profile;
   isOwner: boolean;
+  isCounter: boolean;
 };
 
 const UserContext = createContext<UserContextType | null>(null);

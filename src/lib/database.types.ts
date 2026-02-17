@@ -83,19 +83,19 @@ export type Database = {
         Row: {
           id: string;
           full_name: string | null;
-          role: "owner" | "staff";
+          role: "owner" | "staff" | "counter";
           created_at: string;
         };
         Insert: {
           id: string;
           full_name?: string | null;
-          role?: "owner" | "staff";
+          role?: "owner" | "staff" | "counter";
           created_at?: string;
         };
         Update: {
           id?: string;
           full_name?: string | null;
-          role?: "owner" | "staff";
+          role?: "owner" | "staff" | "counter";
           created_at?: string;
         };
       };
@@ -137,6 +137,52 @@ export type Database = {
           reason?: string | null;
         };
       };
+      stock_counts: {
+        Row: {
+          id: string;
+          location_id: string;
+          counted_by: string;
+          submitted_by: string;
+          week_of: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          location_id: string;
+          counted_by: string;
+          submitted_by: string;
+          week_of: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          location_id?: string;
+          counted_by?: string;
+          submitted_by?: string;
+          week_of?: string;
+          created_at?: string;
+        };
+      };
+      stock_count_items: {
+        Row: {
+          id: string;
+          stock_count_id: string;
+          item_id: string;
+          qty: number;
+        };
+        Insert: {
+          id?: string;
+          stock_count_id: string;
+          item_id: string;
+          qty?: number;
+        };
+        Update: {
+          id?: string;
+          stock_count_id?: string;
+          item_id?: string;
+          qty?: number;
+        };
+      };
     };
     Views: {
       inventory_levels: {
@@ -161,12 +207,12 @@ export type Database = {
     Functions: {
       get_user_role: {
         Args: Record<string, never>;
-        Returns: "owner" | "staff";
+        Returns: "owner" | "staff" | "counter";
       };
     };
     Enums: {
       location_type: "warehouse" | "branch";
-      user_role: "owner" | "staff";
+      user_role: "owner" | "staff" | "counter";
       transaction_type: "RECEIVE" | "TRANSFER" | "ADJUST";
     };
   };
@@ -179,3 +225,5 @@ export type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 export type Transaction = Database["public"]["Tables"]["transactions"]["Row"];
 export type TransactionInsert = Database["public"]["Tables"]["transactions"]["Insert"];
 export type InventoryLevel = Database["public"]["Views"]["inventory_levels"]["Row"];
+export type StockCount = Database["public"]["Tables"]["stock_counts"]["Row"];
+export type StockCountItem = Database["public"]["Tables"]["stock_count_items"]["Row"];
