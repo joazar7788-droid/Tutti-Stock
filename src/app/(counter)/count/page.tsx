@@ -125,19 +125,19 @@ export default function CountPage() {
     }
   }
 
-  // Day restriction check
-  if (!isCountDay()) {
-    return (
-      <div className="flex flex-col items-center justify-center py-16 space-y-4 text-center">
-        <div className="text-5xl">📅</div>
-        <h2 className="text-xl font-bold">Not a count day</h2>
-        <p className="text-gray-500 max-w-sm">
-          Stock counts can be submitted on <strong>Sundays</strong> and{" "}
-          <strong>Mondays</strong>. Please come back then.
-        </p>
-      </div>
-    );
-  }
+  // Day restriction check — temporarily disabled for testing
+  // if (!isCountDay()) {
+  //   return (
+  //     <div className="flex flex-col items-center justify-center py-16 space-y-4 text-center">
+  //       <div className="text-5xl">📅</div>
+  //       <h2 className="text-xl font-bold">Not a count day</h2>
+  //       <p className="text-gray-500 max-w-sm">
+  //         Stock counts can be submitted on <strong>Sundays</strong> and{" "}
+  //         <strong>Mondays</strong>. Please come back then.
+  //       </p>
+  //     </div>
+  //   );
+  // }
 
   // Success screen
   if (step === "success") {
