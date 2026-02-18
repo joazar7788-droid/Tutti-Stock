@@ -755,7 +755,7 @@ export function BranchCountsView({
               <div className="border-t border-gray-100 px-4 py-3">
                 <ItemsTable
                   items={branch.items}
-                  editable={isSingleBranch}
+                  editable
                   branchDates={branchDates}
                   sundayDates={sundayDates}
                 />
