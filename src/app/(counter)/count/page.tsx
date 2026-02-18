@@ -39,9 +39,14 @@ export default function CountPage() {
     null
   );
   const [checkingExisting, setCheckingExisting] = useState(false);
+  // Map of locationId → { countedBy, createdAt } for branches with counts this week
+  const [branchCounts, setBranchCounts] = useState<
+    Map<string, { countedBy: string; createdAt: string }>
+  >(new Map());
 
   useEffect(() => {
     const supabase = createClient();
+    const weekOf = toISODate(getRecentSunday(new Date()));
     Promise.all([
       supabase
         .from("locations")
@@ -55,9 +60,27 @@ export default function CountPage() {
         .eq("is_active", true)
         .order("category")
         .order("name"),
-    ]).then(([locRes, itemRes]) => {
+      supabase
+        .from("stock_counts")
+        .select("location_id, counted_by, created_at")
+        .eq("week_of", weekOf)
+        .order("created_at", { ascending: false }),
+    ]).then(([locRes, itemRes, countsRes]) => {
       if (locRes.data) setBranches(locRes.data);
       if (itemRes.data) setItems(itemRes.data);
+      if (countsRes.data) {
+        const map = new Map<string, { countedBy: string; createdAt: string }>();
+        for (const c of countsRes.data) {
+          // Keep first (most recent) per location
+          if (!map.has(c.location_id)) {
+            map.set(c.location_id, {
+              countedBy: c.counted_by,
+              createdAt: c.created_at,
+            });
+          }
+        }
+        setBranchCounts(map);
+      }
     });
   }, []);
 
@@ -323,19 +346,40 @@ export default function CountPage() {
           <h2 className="text-lg font-semibold">Select your branch</h2>
 
           <div className="grid grid-cols-2 gap-3">
-            {branches.map((branch) => (
-              <button
-                key={branch.id}
-                onClick={() => setSelectedBranch(branch.id)}
-                className={`p-4 rounded-xl border-2 text-left font-medium transition-colors ${
-                  selectedBranch === branch.id
-                    ? "border-brand-500 bg-brand-50 text-brand-700"
-                    : "border-gray-200 hover:border-gray-300"
-                }`}
-              >
-                {branch.name}
-              </button>
-            ))}
+            {branches.map((branch) => {
+              const existing = branchCounts.get(branch.id);
+              const hoursSince = existing
+                ? (Date.now() - new Date(existing.createdAt).getTime()) /
+                  (1000 * 60 * 60)
+                : null;
+              const isLocked = existing && hoursSince !== null && hoursSince > 12;
+              const isEditable = existing && !isLocked;
+              return (
+                <button
+                  key={branch.id}
+                  onClick={() => setSelectedBranch(branch.id)}
+                  className={`p-4 rounded-xl border-2 text-left transition-colors ${
+                    selectedBranch === branch.id
+                      ? "border-brand-500 bg-brand-50 text-brand-700"
+                      : existing
+                        ? "border-amber-200 hover:border-amber-300"
+                        : "border-gray-200 hover:border-gray-300"
+                  }`}
+                >
+                  <div className="font-medium">{branch.name}</div>
+                  {isEditable && (
+                    <div className="text-xs text-amber-600 mt-1">
+                      Count submitted &middot; editable
+                    </div>
+                  )}
+                  {isLocked && (
+                    <div className="text-xs text-gray-400 mt-1">
+                      Count submitted &middot; locked
+                    </div>
+                  )}
+                </button>
+              );
+            })}
           </div>
 
           <div>
