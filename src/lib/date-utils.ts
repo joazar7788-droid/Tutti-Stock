@@ -13,6 +13,13 @@ export function isCountDay(): boolean {
   return day === 0 || day === 1;
 }
 
+/** Get Sunday N weeks ago from the most recent Sunday */
+export function getSundayNWeeksAgo(n: number): Date {
+  const sunday = getRecentSunday(new Date());
+  sunday.setDate(sunday.getDate() - n * 7);
+  return sunday;
+}
+
 /** Format date as ISO date string (YYYY-MM-DD) */
 export function toISODate(date: Date): string {
   return date.toISOString().split("T")[0];

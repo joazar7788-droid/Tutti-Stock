@@ -8,12 +8,15 @@ export async function createItem(formData: FormData) {
 
   const baseUnit = (formData.get("base_unit") as string) || "boxes";
   const pcsPerBox = parseInt(formData.get("pcs_per_box") as string) || 1;
+  const looseUnit = (formData.get("unit") as string) || "pcs";
+  const unit =
+    baseUnit === "boxes" && pcsPerBox > 1 ? looseUnit : baseUnit;
 
   const { error } = await supabase.from("items").insert({
     sku: formData.get("sku") as string,
     name: formData.get("name") as string,
     category: (formData.get("category") as string) || null,
-    unit: baseUnit,
+    unit,
     base_unit: baseUnit,
     pcs_per_box: pcsPerBox,
     reorder_point: parseInt(formData.get("reorder_point") as string) || 0,
@@ -32,6 +35,9 @@ export async function updateItem(id: string, formData: FormData) {
 
   const baseUnit = (formData.get("base_unit") as string) || "boxes";
   const pcsPerBox = parseInt(formData.get("pcs_per_box") as string) || 1;
+  const looseUnit = (formData.get("unit") as string) || "pcs";
+  const unit =
+    baseUnit === "boxes" && pcsPerBox > 1 ? looseUnit : baseUnit;
 
   const { error } = await supabase
     .from("items")
@@ -39,7 +45,7 @@ export async function updateItem(id: string, formData: FormData) {
       sku: formData.get("sku") as string,
       name: formData.get("name") as string,
       category: (formData.get("category") as string) || null,
-      unit: baseUnit,
+      unit,
       base_unit: baseUnit,
       pcs_per_box: pcsPerBox,
       reorder_point: parseInt(formData.get("reorder_point") as string) || 0,

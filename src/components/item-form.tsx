@@ -17,6 +17,19 @@ export function ItemForm({
   const [baseUnit, setBaseUnit] = useState<"boxes" | "pcs">(
     item?.base_unit ?? "boxes"
   );
+  const [pcsPerBox, setPcsPerBox] = useState(item?.pcs_per_box ?? 1);
+
+  const LOOSE_UNIT_OPTIONS = [
+    "pcs",
+    "bottles",
+    "bags",
+    "tubs",
+    "tubes",
+    "cups",
+    "rolls",
+    "packs",
+  ];
+  const showLooseUnit = baseUnit === "boxes" && pcsPerBox > 1;
 
   async function handleSubmit(formData: FormData) {
     setLoading(true);
@@ -103,7 +116,10 @@ export function ItemForm({
             name="pcs_per_box"
             type="number"
             min={1}
-            defaultValue={item?.pcs_per_box ?? 1}
+            value={pcsPerBox}
+            onChange={(e) =>
+              setPcsPerBox(parseInt(e.target.value) || 1)
+            }
             className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-500"
           />
           <p className="text-xs text-gray-400 mt-1">
@@ -111,6 +127,28 @@ export function ItemForm({
           </p>
         </div>
       </div>
+
+      {showLooseUnit && (
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Loose Unit
+          </label>
+          <select
+            name="unit"
+            defaultValue={item?.unit ?? "pcs"}
+            className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-500"
+          >
+            {LOOSE_UNIT_OPTIONS.map((u) => (
+              <option key={u} value={u}>
+                {u.charAt(0).toUpperCase() + u.slice(1)}
+              </option>
+            ))}
+          </select>
+          <p className="text-xs text-gray-400 mt-1">
+            What each piece is called (e.g., bottles, bags)
+          </p>
+        </div>
+      )}
 
       <div className="grid grid-cols-2 gap-4">
         <div>
