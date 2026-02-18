@@ -5,11 +5,23 @@ import { createClient } from "@/lib/supabase/client";
 import { CategoryTag, CATEGORY_CONFIG } from "@/components/category-tag";
 import { formatQty } from "@/lib/unit-utils";
 import { isCountDay, getRecentSunday, toISODate } from "@/lib/date-utils";
-import { submitStockCount } from "./actions";
+import {
+  submitStockCount,
+  getExistingCount,
+  updateExistingCount,
+} from "./actions";
 import { signOut } from "@/app/login/actions";
 import type { Item, Location } from "@/lib/database.types";
 
 type Step = "branch" | "items" | "review" | "success";
+
+type ExistingCount = {
+  id: string;
+  countedBy: string;
+  createdAt: string;
+  editable: boolean;
+  items: Array<{ item_id: string; qty: number }>;
+};
 
 export default function CountPage() {
   const [step, setStep] = useState<Step>("branch");
@@ -23,6 +35,10 @@ export default function CountPage() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [existingCount, setExistingCount] = useState<ExistingCount | null>(
+    null
+  );
+  const [checkingExisting, setCheckingExisting] = useState(false);
 
   useEffect(() => {
     const supabase = createClient();
@@ -101,6 +117,59 @@ export default function CountPage() {
     });
   }
 
+  async function handleNext() {
+    if (!selectedBranch || !counterName.trim()) return;
+
+    setCheckingExisting(true);
+    setError(null);
+
+    const weekOf = toISODate(getRecentSunday(new Date()));
+    const result = await getExistingCount(selectedBranch, weekOf);
+
+    setCheckingExisting(false);
+
+    if (result.error) {
+      setError(result.error);
+      return;
+    }
+
+    if (result.count) {
+      if (!result.count.editable) {
+        // Past 12 hours — locked
+        setError(
+          "A count was already submitted for this branch this week and the 12-hour edit window has passed. It can no longer be edited."
+        );
+        return;
+      }
+
+      // Within 12 hours — load for editing
+      setExistingCount(result.count);
+      setCounterName(result.count.countedBy || counterName);
+
+      // Pre-fill quantities from existing count
+      const newCaseQty = new Map<string, number>();
+      const newLooseQty = new Map<string, number>();
+      for (const ci of result.count.items) {
+        const item = items.find((i) => i.id === ci.item_id);
+        if (!item || ci.qty === 0) continue;
+        if (item.base_unit === "boxes" && item.pcs_per_box > 1) {
+          newCaseQty.set(ci.item_id, Math.floor(ci.qty / item.pcs_per_box));
+          const remainder = ci.qty % item.pcs_per_box;
+          if (remainder > 0) newLooseQty.set(ci.item_id, remainder);
+        } else {
+          newCaseQty.set(ci.item_id, ci.qty);
+        }
+      }
+      setCaseQty(newCaseQty);
+      setLooseQty(newLooseQty);
+    } else {
+      // No existing count — fresh form
+      setExistingCount(null);
+    }
+
+    setStep("items");
+  }
+
   async function handleSubmit() {
     if (!selectedBranch) return;
 
@@ -119,12 +188,21 @@ export default function CountPage() {
       return { itemId: item.id, qty: pcsQty };
     });
 
-    const result = await submitStockCount({
-      locationId: selectedBranch,
-      countedBy: counterName,
-      weekOf,
-      items: allItems,
-    });
+    let result;
+    if (existingCount) {
+      result = await updateExistingCount({
+        countId: existingCount.id,
+        countedBy: counterName,
+        items: allItems,
+      });
+    } else {
+      result = await submitStockCount({
+        locationId: selectedBranch,
+        countedBy: counterName,
+        weekOf,
+        items: allItems,
+      });
+    }
 
     if (result.error) {
       setError(result.error);
@@ -133,6 +211,26 @@ export default function CountPage() {
       setStep("success");
       setLoading(false);
     }
+  }
+
+  function formatTimeAgo(dateStr: string): string {
+    const hours = Math.floor(
+      (Date.now() - new Date(dateStr).getTime()) / (1000 * 60 * 60)
+    );
+    if (hours < 1) return "less than an hour ago";
+    if (hours === 1) return "1 hour ago";
+    return `${hours} hours ago`;
+  }
+
+  function formatEditDeadline(dateStr: string): string {
+    const deadline = new Date(
+      new Date(dateStr).getTime() + 12 * 60 * 60 * 1000
+    );
+    return deadline.toLocaleTimeString("en-US", {
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    });
   }
 
   // Day restriction check — temporarily disabled for testing
@@ -154,10 +252,12 @@ export default function CountPage() {
     return (
       <div className="flex flex-col items-center justify-center py-16 space-y-6">
         <div className="text-6xl">✅</div>
-        <h2 className="text-2xl font-bold">Stock Count Submitted!</h2>
+        <h2 className="text-2xl font-bold">
+          {existingCount ? "Stock Count Updated!" : "Stock Count Submitted!"}
+        </h2>
         <p className="text-gray-500">
-          {itemsWithQty.length} item{itemsWithQty.length !== 1 ? "s" : ""} counted
-          at {selectedBranchName}
+          {itemsWithQty.length} item{itemsWithQty.length !== 1 ? "s" : ""}{" "}
+          counted at {selectedBranchName}
         </p>
         <p className="text-sm text-gray-400">Counted by {counterName}</p>
         <div className="flex gap-3">
@@ -171,6 +271,7 @@ export default function CountPage() {
               setSearch("");
               setSelectedCategory(null);
               setError(null);
+              setExistingCount(null);
             }}
             className="px-6 py-3 bg-brand-600 text-white font-semibold rounded-xl hover:bg-brand-700"
           >
@@ -251,11 +352,11 @@ export default function CountPage() {
           </div>
 
           <button
-            onClick={() => setStep("items")}
-            disabled={!selectedBranch || !counterName.trim()}
+            onClick={handleNext}
+            disabled={!selectedBranch || !counterName.trim() || checkingExisting}
             className="w-full py-3 bg-brand-600 text-white font-semibold rounded-xl hover:bg-brand-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Next
+            {checkingExisting ? "Checking..." : "Next"}
           </button>
         </div>
       )}
@@ -268,12 +369,27 @@ export default function CountPage() {
               Count items at {selectedBranchName}
             </h2>
             <button
-              onClick={() => setStep("branch")}
+              onClick={() => {
+                setStep("branch");
+                setExistingCount(null);
+                setCaseQty(new Map());
+                setLooseQty(new Map());
+              }}
               className="text-sm text-brand-600 font-medium"
             >
               Change branch
             </button>
           </div>
+
+          {/* Edit banner */}
+          {existingCount && (
+            <div className="bg-amber-50 border border-amber-200 text-amber-800 px-4 py-3 rounded-xl text-sm">
+              A count was already submitted{" "}
+              {formatTimeAgo(existingCount.createdAt)} by{" "}
+              <strong>{existingCount.countedBy}</strong>. You can edit it until{" "}
+              <strong>{formatEditDeadline(existingCount.createdAt)}</strong>.
+            </div>
+          )}
 
           {/* Search */}
           <input
@@ -404,6 +520,14 @@ export default function CountPage() {
               <span className="text-gray-500">Items with stock</span>
               <span className="font-medium">{itemsWithQty.length}</span>
             </div>
+            {existingCount && (
+              <div className="flex justify-between">
+                <span className="text-gray-500">Mode</span>
+                <span className="font-medium text-amber-600">
+                  Editing existing count
+                </span>
+              </div>
+            )}
           </div>
 
           {itemsWithQty.length === 0 ? (
@@ -461,7 +585,13 @@ export default function CountPage() {
               disabled={loading}
               className="flex-1 py-3 bg-brand-600 text-white font-semibold rounded-xl hover:bg-brand-700 disabled:opacity-50"
             >
-              {loading ? "Submitting..." : "Submit Count"}
+              {loading
+                ? existingCount
+                  ? "Updating..."
+                  : "Submitting..."
+                : existingCount
+                  ? "Update Count"
+                  : "Submit Count"}
             </button>
           </div>
         </div>
