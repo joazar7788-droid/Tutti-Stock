@@ -12,7 +12,6 @@ const navLinks = [
   { href: "/inventory", label: "Inventory" },
   { href: "/branch-counts", label: "Branch Counts" },
   { href: "/deliveries", label: "Activity" },
-  { href: "/items", label: "Manage Items" },
 ];
 
 const ownerLinks = [

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { InventoryTable } from "@/components/inventory-table";
 import { InventoryFilters } from "@/components/inventory-filters";
@@ -42,11 +43,19 @@ export default async function InventoryPage({
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Inventory</h1>
-        <p className="text-gray-500 mt-1">
-          Warehouse stock levels
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold">Inventory</h1>
+          <p className="text-gray-500 mt-1">
+            Warehouse stock levels
+          </p>
+        </div>
+        <Link
+          href="/items/new"
+          className="px-4 py-2 bg-brand-600 text-white text-sm font-semibold rounded-xl hover:bg-brand-700"
+        >
+          + Add Item
+        </Link>
       </div>
 
       <InventoryFilters

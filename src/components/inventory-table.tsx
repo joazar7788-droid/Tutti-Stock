@@ -1,8 +1,44 @@
 "use client";
 
+import { useState } from "react";
+import Link from "next/link";
 import type { InventoryLevel } from "@/lib/database.types";
 import { formatQty } from "@/lib/unit-utils";
 import { CategoryTag } from "@/components/category-tag";
+import { toggleItemFavorite } from "@/app/(authenticated)/items/actions";
+
+function StarButton({
+  itemId,
+  isFavorite,
+}: {
+  itemId: string;
+  isFavorite: boolean;
+}) {
+  const [fav, setFav] = useState(isFavorite);
+  const [saving, setSaving] = useState(false);
+
+  async function handleToggle() {
+    setSaving(true);
+    setFav(!fav);
+    await toggleItemFavorite(itemId, !fav);
+    setSaving(false);
+  }
+
+  return (
+    <button
+      onClick={handleToggle}
+      disabled={saving}
+      className={`text-xs transition-colors ${
+        fav
+          ? "text-yellow-500 hover:text-yellow-600"
+          : "text-gray-300 hover:text-yellow-400"
+      }`}
+      title={fav ? "Remove from favorites" : "Add to favorites"}
+    >
+      {fav ? "★" : "☆"}
+    </button>
+  );
+}
 
 export function InventoryTable({
   inventory,
@@ -66,6 +102,7 @@ export function InventoryTable({
               <th className="text-right py-3 px-3 font-semibold text-gray-600">
                 On Hand
               </th>
+              <th className="w-10 py-3 px-3" />
             </tr>
           </thead>
           <tbody>
@@ -78,12 +115,15 @@ export function InventoryTable({
                 <tr key={item.item_id} className="border-b border-gray-100 hover:bg-gray-50">
                   <td className="py-3 px-3">
                     <div className="flex items-center gap-2">
-                      {item.is_favorite && <span className="text-yellow-500 text-xs">★</span>}
+                      <StarButton
+                        itemId={item.item_id}
+                        isFavorite={item.is_favorite}
+                      />
                       <span className="font-medium">{item.item_name}</span>
                       <CategoryTag category={item.category} />
                     </div>
                     {item.pcs_per_box > 1 && (
-                      <div className="text-xs text-gray-400 mt-0.5">
+                      <div className="text-xs text-gray-400 mt-0.5 ml-5">
                         {item.pcs_per_box} per box
                       </div>
                     )}
@@ -108,6 +148,27 @@ export function InventoryTable({
                       )}
                     </span>
                   </td>
+                  <td className="py-3 px-3 text-center">
+                    <Link
+                      href={`/items/${item.item_id}/edit`}
+                      className="text-gray-400 hover:text-brand-600 transition-colors"
+                      title="Edit item"
+                    >
+                      <svg
+                        className="w-4 h-4 inline"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        strokeWidth={2}
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Z"
+                        />
+                      </svg>
+                    </Link>
+                  </td>
                 </tr>
               );
             })}
@@ -129,35 +190,61 @@ export function InventoryTable({
               }`}
             >
               <div className="flex items-center justify-between">
-                <div>
+                <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    {item.is_favorite && <span className="text-yellow-500">★</span>}
-                    <span className="font-semibold">{item.item_name}</span>
+                    <StarButton
+                      itemId={item.item_id}
+                      isFavorite={item.is_favorite}
+                    />
+                    <span className="font-semibold truncate">
+                      {item.item_name}
+                    </span>
                     <CategoryTag category={item.category} />
                   </div>
                   {item.pcs_per_box > 1 && (
-                    <div className="text-xs text-gray-400 mt-0.5">
+                    <div className="text-xs text-gray-400 mt-0.5 ml-5">
                       {item.pcs_per_box} per box
                     </div>
                   )}
                 </div>
-                <div className="text-right">
-                  <div
-                    className={`font-mono font-semibold ${
-                      isNegative
-                        ? "text-danger-700"
-                        : isLow
-                        ? "text-danger-600"
-                        : ""
-                    }`}
-                  >
-                    {formatQty(item.on_hand, item.base_unit, item.pcs_per_box, item.unit)}
+                <div className="flex items-center gap-3 shrink-0">
+                  <div className="text-right">
+                    <div
+                      className={`font-mono font-semibold ${
+                        isNegative
+                          ? "text-danger-700"
+                          : isLow
+                          ? "text-danger-600"
+                          : ""
+                      }`}
+                    >
+                      {formatQty(item.on_hand, item.base_unit, item.pcs_per_box, item.unit)}
+                    </div>
+                    {isLow && (
+                      <span className="px-2 py-0.5 text-xs font-bold bg-danger-100 text-danger-700 rounded-lg">
+                        LOW
+                      </span>
+                    )}
                   </div>
-                  {isLow && (
-                    <span className="px-2 py-0.5 text-xs font-bold bg-danger-100 text-danger-700 rounded-lg">
-                      LOW
-                    </span>
-                  )}
+                  <Link
+                    href={`/items/${item.item_id}/edit`}
+                    className="text-gray-400 hover:text-brand-600 transition-colors"
+                    title="Edit item"
+                  >
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      strokeWidth={2}
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Z"
+                      />
+                    </svg>
+                  </Link>
                 </div>
               </div>
             </div>

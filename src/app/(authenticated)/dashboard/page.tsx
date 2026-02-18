@@ -28,7 +28,7 @@ const staffActions = [
   {
     href: "/inventory",
     label: "View Inventory",
-    description: "See current warehouse stock levels",
+    description: "Stock levels, edit items, and manage favorites",
     icon: "📊",
     color: "bg-purple-50 border-purple-200 hover:bg-purple-100",
   },
@@ -52,13 +52,6 @@ const staffActions = [
     description: "Add a new product to the inventory catalog",
     icon: "➕",
     color: "bg-teal-50 border-teal-200 hover:bg-teal-100",
-  },
-  {
-    href: "/items",
-    label: "Manage Items",
-    description: "Edit products, thresholds, and favorites",
-    icon: "⚙️",
-    color: "bg-gray-50 border-gray-200 hover:bg-gray-100",
   },
 ];
 
