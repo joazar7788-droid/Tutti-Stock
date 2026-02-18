@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getRecentSunday, getSundayNWeeksAgo, toISODate } from "@/lib/date-utils";
 import { BranchCountsView, type BranchCountData, type SundayDates } from "@/components/branch-counts-view";
@@ -188,19 +189,27 @@ export default async function BranchCountsPage({
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Branch Counts</h1>
-        <p className="text-gray-500 mt-1">
-          Weekly stock counts from all branches — week of{" "}
-          {new Date(toISODate(thisWeek) + "T00:00:00").toLocaleDateString(
-            "en-US",
-            {
-              month: "short",
-              day: "numeric",
-              year: "numeric",
-            }
-          )}
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold">Branch Counts</h1>
+          <p className="text-gray-500 mt-1">
+            Weekly stock counts from all branches — week of{" "}
+            {new Date(toISODate(thisWeek) + "T00:00:00").toLocaleDateString(
+              "en-US",
+              {
+                month: "short",
+                day: "numeric",
+                year: "numeric",
+              }
+            )}
+          </p>
+        </div>
+        <Link
+          href="/branch-counts/new"
+          className="px-4 py-2 bg-brand-600 text-white text-sm font-semibold rounded-xl hover:bg-brand-700"
+        >
+          + Add Count
+        </Link>
       </div>
 
       <BranchCountsView
