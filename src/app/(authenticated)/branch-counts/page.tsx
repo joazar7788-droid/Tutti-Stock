@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { getRecentSunday, getSundayNWeeksAgo, toISODate } from "@/lib/date-utils";
-import { BranchCountsView, type BranchCountData } from "@/components/branch-counts-view";
+import { BranchCountsView, type BranchCountData, type SundayDates } from "@/components/branch-counts-view";
 
 export default async function BranchCountsPage({
   searchParams,
@@ -68,6 +68,8 @@ export default async function BranchCountsPage({
 
   const branchIds = branches.map((b) => b.id);
   let deliveriesByBranchWeek = new Map<string, Map<string, number>>();
+  // Track earliest delivery date per branch+week
+  let deliveryDatesByBranchWeek = new Map<string, string>();
 
   if (branchIds.length > 0) {
     const { data: deliveries } = await supabase
@@ -98,6 +100,12 @@ export default async function BranchCountsPage({
       }
       const itemMap = deliveriesByBranchWeek.get(branchWeekKey)!;
       itemMap.set(d.item_id, (itemMap.get(d.item_id) ?? 0) + d.qty);
+
+      // Track earliest delivery date for this branch+week
+      const existing = deliveryDatesByBranchWeek.get(branchWeekKey);
+      if (!existing || d.created_at < existing) {
+        deliveryDatesByBranchWeek.set(branchWeekKey, d.created_at);
+      }
     }
   }
 
@@ -162,23 +170,20 @@ export default async function BranchCountsPage({
       hasPastData:
         !!lastWeekData || !!twoWeeksAgoData || !!deliveries2wk || !!deliveries1wk,
       items: displayItems,
+      // Actual dates per branch
+      countDateTwoWeeksAgo: twoWeeksAgoData?.count.created_at ?? null,
+      deliveryDateTwoWeeksAgo: deliveryDatesByBranchWeek.get(`${branch.id}:${toISODate(twoWeeksAgo)}`) ?? null,
+      countDateLastWeek: lastWeekData?.count.created_at ?? null,
+      deliveryDateLastWeek: deliveryDatesByBranchWeek.get(`${branch.id}:${toISODate(lastWeek)}`) ?? null,
+      countDateThisWeek: currentData?.count.created_at ?? null,
     };
   });
 
-  // Format week dates for column headers
-  const weekHeaders = {
-    twoWeeksAgo: twoWeeksAgo.toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-    }),
-    lastWeek: lastWeek.toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-    }),
-    thisWeek: thisWeek.toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-    }),
+  // Sunday ISO dates for fallback headers
+  const sundayDates: SundayDates = {
+    twoWeeksAgo: toISODate(twoWeeksAgo),
+    lastWeek: toISODate(lastWeek),
+    thisWeek: toISODate(thisWeek),
   };
 
   return (
@@ -202,7 +207,7 @@ export default async function BranchCountsPage({
         branches={branchData}
         allBranches={branches.map((b) => ({ id: b.id, name: b.name }))}
         currentBranch={params.branch}
-        weekHeaders={weekHeaders}
+        sundayDates={sundayDates}
       />
     </div>
   );
