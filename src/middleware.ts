@@ -44,7 +44,16 @@ export async function middleware(request: NextRequest) {
       .from("profiles")
       .select("role")
       .eq("id", user.id)
+      .eq("stock_access", true)
       .single();
+
+    // No stock access — sign out and redirect to login
+    if (!profile && !pathname.startsWith("/login")) {
+      await supabase.auth.signOut();
+      const url = request.nextUrl.clone();
+      url.pathname = "/login";
+      return NextResponse.redirect(url);
+    }
 
     const role = profile?.role;
 

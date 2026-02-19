@@ -15,14 +15,20 @@ export async function signIn(formData: FormData) {
     return { error: error.message };
   }
 
-  // Check role for redirect
+  // Check role + stock access for redirect
   const { data: profile } = await supabase
     .from("profiles")
     .select("role")
     .eq("id", data.user.id)
+    .eq("stock_access", true)
     .single();
 
-  if (profile?.role === "counter") {
+  if (!profile) {
+    await supabase.auth.signOut();
+    return { error: "You don't have access to this site." };
+  }
+
+  if (profile.role === "counter") {
     redirect("/count");
   }
 
