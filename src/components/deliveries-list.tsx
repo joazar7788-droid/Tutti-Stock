@@ -2,14 +2,17 @@
 
 import { useState } from "react";
 import { formatQty } from "@/lib/unit-utils";
+import { CategoryTag } from "@/components/category-tag";
 
 export type ActivityGroup = {
   key: string;
   title: string;
   type: "RECEIVE" | "TRANSFER" | "ADJUST";
   date: string;
+  madeBy: string | null;
   items: {
     item_name: string;
+    category: string | null;
     qty: number;
     base_unit: "boxes" | "pcs";
     pcs_per_box: number;
@@ -100,15 +103,25 @@ export function DeliveriesList({ groups }: { groups: ActivityGroup[] }) {
             </button>
 
             {isOpen && (
-              <div className="border-t border-gray-100 divide-y divide-gray-100">
-                {group.items.map((item, i) => (
-                  <div key={i} className="px-4 py-2.5 flex items-center justify-between">
-                    <span className="text-sm">{item.item_name}</span>
-                    <span className="text-sm font-mono font-semibold">
-                      {formatQty(item.qty, item.base_unit, item.pcs_per_box)}
-                    </span>
+              <div className="border-t border-gray-100">
+                {group.madeBy && (
+                  <div className="px-4 py-2 text-xs text-gray-400">
+                    Made by {group.madeBy}
                   </div>
-                ))}
+                )}
+                <div className="divide-y divide-gray-100">
+                  {group.items.map((item, i) => (
+                    <div key={i} className="px-4 py-2.5 flex items-center justify-between">
+                      <span className="text-sm flex items-center gap-1.5">
+                        {item.item_name}
+                        <CategoryTag category={item.category} />
+                      </span>
+                      <span className="text-sm font-mono font-semibold">
+                        {formatQty(item.qty, item.base_unit, item.pcs_per_box)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
           </div>

@@ -28,7 +28,7 @@ export default async function ActivityPage({
   // Fetch transactions (all types or filtered)
   let query = supabase
     .from("transactions")
-    .select("id, created_at, transaction_type, item_id, from_location_id, to_location_id, qty, note, reason")
+    .select("id, created_at, created_by, transaction_type, item_id, from_location_id, to_location_id, qty, note, reason")
     .order("created_at", { ascending: false });
 
   if (params.type === "TRANSFER") {
@@ -54,10 +54,19 @@ export default async function ActivityPage({
   // Fetch items for enrichment
   const { data: allItems } = await supabase
     .from("items")
-    .select("id, name, sku, base_unit, pcs_per_box");
+    .select("id, name, sku, base_unit, pcs_per_box, category");
 
   const itemMap = new Map(
     (allItems ?? []).map((i) => [i.id, i])
+  );
+
+  // Fetch profiles for "made by" display
+  const { data: allProfiles } = await supabase
+    .from("profiles")
+    .select("id, full_name");
+
+  const profileMap = new Map(
+    (allProfiles ?? []).map((p) => [p.id, p.full_name ?? "Unknown"])
   );
 
   // Group transactions into batches
@@ -91,12 +100,14 @@ export default async function ActivityPage({
         title,
         type,
         date: tx.created_at,
+        madeBy: profileMap.get(tx.created_by) ?? null,
         items: [],
       });
     }
 
     groupMap.get(key)!.items.push({
       item_name: item.name,
+      category: item.category,
       qty: tx.qty,
       base_unit: item.base_unit as "boxes" | "pcs",
       pcs_per_box: item.pcs_per_box,
