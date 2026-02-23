@@ -566,6 +566,48 @@ function ItemsTable({
   );
 }
 
+function DeleteCountButton({ countId }: { countId: string }) {
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  async function handleDelete() {
+    setDeleting(true);
+    await deleteStockCount(countId);
+    setShowConfirm(false);
+    setDeleting(false);
+  }
+
+  return (
+    <div className="px-4 pb-3 flex justify-end">
+      {showConfirm ? (
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-gray-500">Delete this count?</span>
+          <button
+            onClick={handleDelete}
+            disabled={deleting}
+            className="text-xs px-3 py-1.5 bg-danger-600 text-white rounded-lg hover:bg-danger-700 disabled:opacity-50"
+          >
+            {deleting ? "Deleting..." : "Yes, delete"}
+          </button>
+          <button
+            onClick={() => setShowConfirm(false)}
+            className="text-xs px-3 py-1.5 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200"
+          >
+            Cancel
+          </button>
+        </div>
+      ) : (
+        <button
+          onClick={() => setShowConfirm(true)}
+          className="text-xs px-3 py-1.5 text-danger-600 border border-danger-200 rounded-lg hover:bg-danger-50"
+        >
+          Delete Count
+        </button>
+      )}
+    </div>
+  );
+}
+
 export function BranchCountsView({
   branches,
   allBranches,
@@ -582,8 +624,6 @@ export function BranchCountsView({
   const router = useRouter();
   const searchParams = useSearchParams();
   const [openKeys, setOpenKeys] = useState<Set<string>>(new Set());
-  const [deleting, setDeleting] = useState(false);
-  const [showConfirm, setShowConfirm] = useState(false);
 
   function toggle(key: string) {
     setOpenKeys((prev) => {
@@ -605,13 +645,6 @@ export function BranchCountsView({
       params.delete("branch");
     }
     router.push(`/branch-counts?${params.toString()}`);
-  }
-
-  async function handleDeleteCount(countId: string) {
-    setDeleting(true);
-    await deleteStockCount(countId);
-    setShowConfirm(false);
-    setDeleting(false);
   }
 
   const filteredBranches = currentBranch
@@ -720,37 +753,11 @@ export function BranchCountsView({
               {!isSingleBranch && <ChevronIcon open={isOpen} />}
             </button>
 
-            {/* Delete count button — owner/staff only */}
-            {isSingleBranch && branch.countId && (userRole === "owner" || userRole === "staff") && (
-              <div className="px-4 pb-3 flex justify-end">
-                {showConfirm ? (
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-gray-500">
-                      Delete this count?
-                    </span>
-                    <button
-                      onClick={() => handleDeleteCount(branch.countId!)}
-                      disabled={deleting}
-                      className="text-xs px-3 py-1.5 bg-danger-600 text-white rounded-lg hover:bg-danger-700 disabled:opacity-50"
-                    >
-                      {deleting ? "Deleting..." : "Yes, delete"}
-                    </button>
-                    <button
-                      onClick={() => setShowConfirm(false)}
-                      className="text-xs px-3 py-1.5 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200"
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                ) : (
-                  <button
-                    onClick={() => setShowConfirm(true)}
-                    className="text-xs px-3 py-1.5 text-danger-600 border border-danger-200 rounded-lg hover:bg-danger-50"
-                  >
-                    Delete Count
-                  </button>
-                )}
-              </div>
+            {/* Delete count button — owner/manager only */}
+            {isOpen && branch.countId && (userRole === "owner" || userRole === "manager") && (
+              <DeleteCountButton
+                countId={branch.countId}
+              />
             )}
 
             {isOpen && (
