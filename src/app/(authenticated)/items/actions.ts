@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 export async function createItem(formData: FormData) {
   const supabase = await createClient();
@@ -32,6 +33,11 @@ export async function createItem(formData: FormData) {
 
 export async function updateItem(id: string, formData: FormData) {
   const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) return { error: "Not authenticated" };
 
   const baseUnit = (formData.get("base_unit") as string) || "boxes";
   const pcsPerBox = parseInt(formData.get("pcs_per_box") as string) || 1;
@@ -39,7 +45,8 @@ export async function updateItem(id: string, formData: FormData) {
   const unit =
     baseUnit === "boxes" && pcsPerBox > 1 ? looseUnit : baseUnit;
 
-  const { error } = await supabase
+  const adminClient = createAdminClient();
+  const { error } = await adminClient
     .from("items")
     .update({
       sku: formData.get("sku") as string,

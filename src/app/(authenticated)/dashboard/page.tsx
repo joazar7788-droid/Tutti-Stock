@@ -40,10 +40,17 @@ const staffActions = [
     color: "bg-cyan-50 border-cyan-200 hover:bg-cyan-100",
   },
   {
+    href: "/delivery-planner",
+    label: "Delivery Planner",
+    description: "Plan weekly deliveries based on branch counts",
+    icon: "📋",
+    color: "bg-orange-50 border-orange-200 hover:bg-orange-100",
+  },
+  {
     href: "/deliveries",
     label: "View Activity",
     description: "See all stock movements and history",
-    icon: "📋",
+    icon: "📜",
     color: "bg-indigo-50 border-indigo-200 hover:bg-indigo-100",
   },
   {

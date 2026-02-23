@@ -7,7 +7,8 @@ import { LocationPicker } from "@/components/location-picker";
 import { ItemPicker } from "@/components/item-picker";
 import { ItemCart, type CartItem } from "@/components/item-cart";
 import { createDelivery } from "@/app/(authenticated)/transactions/actions";
-import { toPcs, formatQty } from "@/lib/unit-utils";
+import { getLatestFinalizedPlanForBranch } from "@/app/(authenticated)/delivery-planner/actions";
+import { toPcs, fromPcs, formatQty } from "@/lib/unit-utils";
 import type { Location, Item } from "@/lib/database.types";
 
 type Step = "branch" | "items" | "quantities" | "review";
@@ -23,6 +24,8 @@ export default function DeliverPage() {
   const [inputUnits, setInputUnits] = useState<Map<string, "boxes" | "pcs">>(new Map());
   const [note, setNote] = useState("");
   const [loading, setLoading] = useState(false);
+  const [importing, setImporting] = useState(false);
+  const [importMessage, setImportMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
@@ -92,6 +95,47 @@ export default function DeliverPage() {
       next.delete(itemId);
       return next;
     });
+  }
+
+  async function handleImportFromPlan() {
+    if (!selectedBranch) return;
+    setImporting(true);
+    setImportMessage(null);
+
+    const result = await getLatestFinalizedPlanForBranch(selectedBranch);
+    if (!result.items || result.items.length === 0) {
+      setImportMessage("No finalized delivery plan found for this branch.");
+      setImporting(false);
+      return;
+    }
+
+    // Pre-fill selected items and quantities from plan
+    const newSelectedIds = new Set<string>();
+    const newQuantities = new Map<string, number>();
+    const newInputUnits = new Map<string, "boxes" | "pcs">();
+
+    for (const planItem of result.items) {
+      const item = items.find((i) => i.id === planItem.item_id);
+      if (!item) continue;
+      newSelectedIds.add(planItem.item_id);
+      // Convert pcs to the item's base unit for display
+      const displayVal = fromPcs(planItem.qty, item.base_unit, item.pcs_per_box);
+      // If it divides evenly into boxes, show as boxes; otherwise show as pcs
+      if (item.base_unit === "boxes" && item.pcs_per_box > 1 && planItem.qty % item.pcs_per_box !== 0) {
+        newInputUnits.set(planItem.item_id, "pcs");
+        newQuantities.set(planItem.item_id, planItem.qty);
+      } else {
+        newInputUnits.set(planItem.item_id, item.base_unit);
+        newQuantities.set(planItem.item_id, Math.max(1, Math.round(displayVal)));
+      }
+    }
+
+    setSelectedItemIds(newSelectedIds);
+    setQuantities(newQuantities);
+    setInputUnits(newInputUnits);
+    setImportMessage(`Imported ${newSelectedIds.size} items from delivery plan.`);
+    setImporting(false);
+    setStep("quantities");
   }
 
   async function handleSubmit() {
@@ -210,6 +254,16 @@ export default function DeliverPage() {
               Change branch
             </button>
           </div>
+          <button
+            onClick={handleImportFromPlan}
+            disabled={importing}
+            className="w-full py-3 bg-gray-100 text-gray-700 font-semibold rounded-xl hover:bg-gray-200 disabled:opacity-50 border border-dashed border-gray-300"
+          >
+            {importing ? "Importing..." : "Import from Delivery Plan"}
+          </button>
+          {importMessage && (
+            <p className="text-sm text-gray-500">{importMessage}</p>
+          )}
           <ItemPicker
             items={items}
             selectedIds={selectedItemIds}

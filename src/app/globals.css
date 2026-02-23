@@ -37,3 +37,17 @@ body {
 input, select, textarea {
   font-size: 16px;
 }
+
+/* Print styles for delivery sheet */
+@media print {
+  nav, .no-print {
+    display: none !important;
+  }
+  main {
+    padding: 0 !important;
+    max-width: 100% !important;
+  }
+  body {
+    background: white !important;
+  }
+}

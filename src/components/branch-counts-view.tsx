@@ -571,11 +571,13 @@ export function BranchCountsView({
   allBranches,
   currentBranch,
   sundayDates,
+  userRole,
 }: {
   branches: BranchCountData[];
   allBranches: Array<{ id: string; name: string }>;
   currentBranch?: string;
   sundayDates: SundayDates;
+  userRole?: string;
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -718,8 +720,8 @@ export function BranchCountsView({
               {!isSingleBranch && <ChevronIcon open={isOpen} />}
             </button>
 
-            {/* Delete count button — single branch only */}
-            {isSingleBranch && branch.countId && (
+            {/* Delete count button — owner/staff only */}
+            {isSingleBranch && branch.countId && (userRole === "owner" || userRole === "staff") && (
               <div className="px-4 pb-3 flex justify-end">
                 {showConfirm ? (
                   <div className="flex items-center gap-2">

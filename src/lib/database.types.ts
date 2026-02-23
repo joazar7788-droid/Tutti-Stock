@@ -183,6 +183,58 @@ export type Database = {
           qty?: number;
         };
       };
+      delivery_plans: {
+        Row: {
+          id: string;
+          created_by: string;
+          week_of: string;
+          status: "draft" | "finalized";
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          created_by: string;
+          week_of: string;
+          status?: "draft" | "finalized";
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          created_by?: string;
+          week_of?: string;
+          status?: "draft" | "finalized";
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      delivery_plan_items: {
+        Row: {
+          id: string;
+          plan_id: string;
+          item_id: string;
+          to_location_id: string;
+          qty: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          plan_id: string;
+          item_id: string;
+          to_location_id: string;
+          qty: number;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          plan_id?: string;
+          item_id?: string;
+          to_location_id?: string;
+          qty?: number;
+          created_at?: string;
+        };
+      };
     };
     Views: {
       inventory_levels: {
@@ -227,3 +279,5 @@ export type TransactionInsert = Database["public"]["Tables"]["transactions"]["In
 export type InventoryLevel = Database["public"]["Views"]["inventory_levels"]["Row"];
 export type StockCount = Database["public"]["Tables"]["stock_counts"]["Row"];
 export type StockCountItem = Database["public"]["Tables"]["stock_count_items"]["Row"];
+export type DeliveryPlan = Database["public"]["Tables"]["delivery_plans"]["Row"];
+export type DeliveryPlanItem = Database["public"]["Tables"]["delivery_plan_items"]["Row"];

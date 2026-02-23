@@ -11,6 +11,15 @@ export default async function BranchCountsPage({
   const params = await searchParams;
   const supabase = await createClient();
 
+  // Get current user's role
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const { data: userProfile } = user
+    ? await supabase.from("profiles").select("role").eq("id", user.id).single()
+    : { data: null };
+  const userRole = (userProfile?.role as string) ?? "staff";
+
   // Get all branch locations
   const { data: allLocations } = await supabase
     .from("locations")
@@ -217,6 +226,7 @@ export default async function BranchCountsPage({
         allBranches={branches.map((b) => ({ id: b.id, name: b.name }))}
         currentBranch={params.branch}
         sundayDates={sundayDates}
+        userRole={userRole}
       />
     </div>
   );

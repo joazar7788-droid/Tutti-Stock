@@ -11,6 +11,7 @@ const navLinks = [
   { href: "/transactions/new", label: "New Transaction" },
   { href: "/inventory", label: "Inventory" },
   { href: "/branch-counts", label: "Branch Counts" },
+  { href: "/delivery-planner", label: "Planner" },
   { href: "/deliveries", label: "Activity" },
 ];
 
