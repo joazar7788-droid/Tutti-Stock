@@ -59,7 +59,7 @@ export async function addPlanItem(
 
   if (!user) return { error: "Not authenticated" };
 
-  // Verify plan is still draft
+  // Verify plan exists
   const { data: plan } = await supabase
     .from("delivery_plans")
     .select("status")
@@ -67,7 +67,6 @@ export async function addPlanItem(
     .single();
 
   if (!plan) return { error: "Plan not found" };
-  if (plan.status !== "draft") return { error: "Plan is already finalized" };
 
   // Check warehouse stock vs total planned
   const { data: warehouseStock } = await supabase

@@ -334,7 +334,6 @@ export function DeliveryPlannerView({
                 onToggle={() => toggleCategory(cat.name)}
                 onAddClick={(itemId) => setPopoverItemId(itemId)}
                 onRemovePlanItem={handleRemovePlanItem}
-                isDraft={isDraft}
               />
             ))}
           </tbody>
@@ -384,7 +383,6 @@ function CategorySection({
   onToggle,
   onAddClick,
   onRemovePlanItem,
-  isDraft,
 }: {
   category: {
     name: string;
@@ -400,7 +398,6 @@ function CategorySection({
   onToggle: () => void;
   onAddClick: (itemId: string) => void;
   onRemovePlanItem: (planItemId: string) => void;
-  isDraft: boolean;
 }) {
   const colSpan = branches.length + 3; // item + branches + warehouse + to-deliver
 
@@ -454,7 +451,6 @@ function CategorySection({
             planItems={getPlanItemsForItem(item.id)}
             onAddClick={() => onAddClick(item.id)}
             onRemovePlanItem={onRemovePlanItem}
-            isDraft={isDraft}
           />
         ))}
     </>
@@ -470,7 +466,6 @@ function ItemRow({
   planItems,
   onAddClick,
   onRemovePlanItem,
-  isDraft,
 }: {
   item: PlannerItem;
   branches: PlannerBranch[];
@@ -478,7 +473,6 @@ function ItemRow({
   planItems: PlannerPlanItem[];
   onAddClick: () => void;
   onRemovePlanItem: (planItemId: string) => void;
-  isDraft: boolean;
 }) {
   return (
     <tr className="border-t border-gray-50 hover:bg-gray-50/50">
@@ -529,53 +523,49 @@ function ItemRow({
             >
               {shortBranchName(pi.toLocationId)}:{" "}
               {formatQty(pi.qty, item.baseUnit, item.pcsPerBox)}
-              {isDraft && (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onRemovePlanItem(pi.id);
-                  }}
-                  className="ml-0.5 hover:text-danger-600"
-                  aria-label="Remove"
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onRemovePlanItem(pi.id);
+                }}
+                className="ml-0.5 hover:text-danger-600"
+                aria-label="Remove"
+              >
+                <svg
+                  className="w-3 h-3"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
                 >
-                  <svg
-                    className="w-3 h-3"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M6 18L18 6M6 6l12 12"
-                    />
-                  </svg>
-                </button>
-              )}
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
             </span>
           ))}
-          {isDraft && (
-            <button
-              onClick={onAddClick}
-              className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-gray-100 text-gray-500 hover:bg-brand-100 hover:text-brand-600 transition-colors"
-              aria-label="Add delivery"
+          <button
+            onClick={onAddClick}
+            className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-gray-100 text-gray-500 hover:bg-brand-100 hover:text-brand-600 transition-colors"
+            aria-label="Add delivery"
+          >
+            <svg
+              className="w-3.5 h-3.5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
             >
-              <svg
-                className="w-3.5 h-3.5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 4v16m8-8H4"
-                />
-              </svg>
-            </button>
-          )}
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 4v16m8-8H4"
+              />
+            </svg>
+          </button>
         </div>
       </td>
     </tr>
