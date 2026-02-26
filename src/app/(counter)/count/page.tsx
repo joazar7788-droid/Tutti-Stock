@@ -128,7 +128,7 @@ export default function CountPage() {
     itemId: string,
     value: string
   ) {
-    const num = parseInt(value, 10);
+    const num = parseFloat(value);
     setter((prev) => {
       const next = new Map(prev);
       if (isNaN(num) || value === "") {
@@ -176,9 +176,15 @@ export default function CountPage() {
         const item = items.find((i) => i.id === ci.item_id);
         if (!item || ci.qty === 0) continue;
         if (item.base_unit === "boxes" && item.pcs_per_box > 1) {
-          newCaseQty.set(ci.item_id, Math.floor(ci.qty / item.pcs_per_box));
-          const remainder = ci.qty % item.pcs_per_box;
-          if (remainder > 0) newLooseQty.set(ci.item_id, remainder);
+          const exactBoxes = ci.qty / item.pcs_per_box;
+          if (Number.isInteger(exactBoxes * 2)) {
+            // Clean half-case value (e.g. 2.5 boxes) — no loose remainder
+            newCaseQty.set(ci.item_id, exactBoxes);
+          } else {
+            newCaseQty.set(ci.item_id, Math.floor(exactBoxes));
+            const remainder = ci.qty - Math.floor(exactBoxes) * item.pcs_per_box;
+            if (remainder > 0) newLooseQty.set(ci.item_id, remainder);
+          }
         } else {
           newCaseQty.set(ci.item_id, ci.qty);
         }
@@ -497,8 +503,9 @@ export default function CountPage() {
                   <div className="flex items-center gap-1.5 shrink-0">
                     <input
                       type="number"
-                      inputMode="numeric"
+                      inputMode="decimal"
                       min={0}
+                      step="0.5"
                       value={caseQty.get(item.id) ?? ""}
                       onChange={(e) =>
                         handleMapChange(setCaseQty, item.id, e.target.value)
@@ -513,8 +520,9 @@ export default function CountPage() {
                       <>
                         <input
                           type="number"
-                          inputMode="numeric"
+                          inputMode="decimal"
                           min={0}
+                          step="0.5"
                           value={looseQty.get(item.id) ?? ""}
                           onChange={(e) =>
                             handleMapChange(

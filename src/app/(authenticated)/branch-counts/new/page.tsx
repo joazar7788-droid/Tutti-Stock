@@ -98,7 +98,7 @@ export default function NewBranchCountPage() {
     itemId: string,
     value: string
   ) {
-    const num = parseInt(value, 10);
+    const num = parseFloat(value);
     setter((prev) => {
       const next = new Map(prev);
       if (isNaN(num) || value === "") {
@@ -330,8 +330,9 @@ export default function NewBranchCountPage() {
                   <div className="flex items-center gap-1.5 shrink-0">
                     <input
                       type="number"
-                      inputMode="numeric"
+                      inputMode="decimal"
                       min={0}
+                      step="0.5"
                       value={caseQty.get(item.id) ?? ""}
                       onChange={(e) =>
                         handleMapChange(setCaseQty, item.id, e.target.value)
@@ -346,8 +347,9 @@ export default function NewBranchCountPage() {
                       <>
                         <input
                           type="number"
-                          inputMode="numeric"
+                          inputMode="decimal"
                           min={0}
+                          step="0.5"
                           value={looseQty.get(item.id) ?? ""}
                           onChange={(e) =>
                             handleMapChange(

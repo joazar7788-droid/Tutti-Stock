@@ -20,8 +20,8 @@ export async function createItem(formData: FormData) {
     unit,
     base_unit: baseUnit,
     pcs_per_box: pcsPerBox,
-    reorder_point: parseInt(formData.get("reorder_point") as string) || 0,
-    target_stock: parseInt(formData.get("target_stock") as string) || 0,
+    reorder_point: parseFloat(formData.get("reorder_point") as string) || 0,
+    target_stock: parseFloat(formData.get("target_stock") as string) || 0,
   });
 
   if (error) return { error: error.message };
@@ -55,8 +55,8 @@ export async function updateItem(id: string, formData: FormData) {
       unit,
       base_unit: baseUnit,
       pcs_per_box: pcsPerBox,
-      reorder_point: parseInt(formData.get("reorder_point") as string) || 0,
-      target_stock: parseInt(formData.get("target_stock") as string) || 0,
+      reorder_point: parseFloat(formData.get("reorder_point") as string) || 0,
+      target_stock: parseFloat(formData.get("target_stock") as string) || 0,
     })
     .eq("id", id);
 

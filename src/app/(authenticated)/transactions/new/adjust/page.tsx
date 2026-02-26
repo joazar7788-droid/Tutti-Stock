@@ -202,8 +202,9 @@ export default function AdjustPage() {
             <input
               type="number"
               value={qty}
-              onChange={(e) => setQty(Math.max(1, parseInt(e.target.value) || 1))}
-              min={1}
+              onChange={(e) => setQty(Math.max(0.5, parseFloat(e.target.value) || 0.5))}
+              min={0.5}
+              step="0.5"
               required
               className="flex-1 px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-500"
             />

@@ -28,7 +28,7 @@ export function fromPcs(
 
 /**
  * Get the numeric display value in the item's base unit.
- * For items stored in boxes: returns number of full boxes.
+ * For items stored in boxes: returns number of boxes (may be fractional, e.g. 2.5).
  * For items stored in pcs: returns pcs directly.
  */
 export function displayQty(
@@ -37,12 +37,12 @@ export function displayQty(
   pcsPerBox: number
 ): number {
   if (baseUnit === "pcs" || pcsPerBox <= 1) return pcsQty;
-  return Math.floor(pcsQty / pcsPerBox);
+  return pcsQty / pcsPerBox;
 }
 
 /**
  * Format a quantity stored in pcs for display in the item's base_unit.
- * Examples: "100 boxes", "8 pcs", "2 boxes + 3 pcs"
+ * Examples: "100 boxes", "8 pcs", "2.5 boxes", "2 boxes + 3 pcs"
  */
 export function formatQty(
   pcsQty: number,
@@ -56,12 +56,14 @@ export function formatQty(
   if (pcsPerBox <= 1) {
     return `${pcsQty} ${pcsQty === 1 ? "box" : "boxes"}`;
   }
-  const boxes = Math.floor(pcsQty / pcsPerBox);
-  const remainder = pcsQty % pcsPerBox;
-  const pcsLabel = unitLabel || "pcs";
-  if (remainder === 0) {
-    return `${boxes} ${boxes === 1 ? "box" : "boxes"}`;
+  const exactBoxes = pcsQty / pcsPerBox;
+  // If the result is a clean multiple of 0.5, display as fractional boxes
+  if (Number.isInteger(exactBoxes * 2)) {
+    return `${exactBoxes} ${exactBoxes === 1 ? "box" : "boxes"}`;
   }
+  const boxes = Math.floor(exactBoxes);
+  const remainder = pcsQty - boxes * pcsPerBox;
+  const pcsLabel = unitLabel || "pcs";
   if (boxes === 0) {
     return `${remainder} ${pcsLabel}`;
   }

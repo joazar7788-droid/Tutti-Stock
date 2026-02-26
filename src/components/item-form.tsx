@@ -159,6 +159,7 @@ export function ItemForm({
             name="reorder_point"
             type="number"
             min={0}
+            step="0.5"
             defaultValue={item?.reorder_point ?? 0}
             className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-500"
           />
@@ -174,6 +175,7 @@ export function ItemForm({
             name="target_stock"
             type="number"
             min={0}
+            step="0.5"
             defaultValue={item?.target_stock ?? 0}
             className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-500"
           />

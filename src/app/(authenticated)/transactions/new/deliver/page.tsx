@@ -126,7 +126,7 @@ export default function DeliverPage() {
         newQuantities.set(planItem.item_id, planItem.qty);
       } else {
         newInputUnits.set(planItem.item_id, item.base_unit);
-        newQuantities.set(planItem.item_id, Math.max(1, Math.round(displayVal)));
+        newQuantities.set(planItem.item_id, Math.max(0.5, displayVal));
       }
     }
 

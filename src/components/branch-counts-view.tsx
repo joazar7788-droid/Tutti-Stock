@@ -122,10 +122,17 @@ function EditModal({
   onClose: () => void;
 }) {
   const hasBoxes = item.baseUnit === "boxes" && item.pcsPerBox > 1;
-  const initialCases = hasBoxes
-    ? Math.floor(item.qty / item.pcsPerBox)
-    : item.qty;
-  const initialLoose = hasBoxes ? item.qty % item.pcsPerBox : 0;
+  const exactBoxes = hasBoxes ? item.qty / item.pcsPerBox : item.qty;
+  const initialCases = hasBoxes && Number.isInteger(exactBoxes * 2)
+    ? exactBoxes
+    : hasBoxes
+      ? Math.floor(exactBoxes)
+      : item.qty;
+  const initialLoose = hasBoxes && Number.isInteger(exactBoxes * 2)
+    ? 0
+    : hasBoxes
+      ? item.qty - Math.floor(exactBoxes) * item.pcsPerBox
+      : 0;
 
   const [cases, setCases] = useState(String(initialCases));
   const [loose, setLoose] = useState(String(initialLoose));
@@ -137,8 +144,8 @@ function EditModal({
   async function handleSave() {
     if (!item.stockCountItemId) return;
     setSaving(true);
-    const c = parseInt(cases, 10) || 0;
-    const l = parseInt(loose, 10) || 0;
+    const c = parseFloat(cases) || 0;
+    const l = parseFloat(loose) || 0;
     const totalPcs = hasBoxes ? c * item.pcsPerBox + l : c;
     await updateStockCountItem(item.stockCountItemId, Math.max(0, totalPcs));
     setSaving(false);
@@ -162,8 +169,9 @@ function EditModal({
           <div className="text-center">
             <input
               type="number"
-              inputMode="numeric"
+              inputMode="decimal"
               min={0}
+              step="0.5"
               value={cases}
               onChange={(e) => setCases(e.target.value)}
               className="w-16 px-2 py-2 text-center rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm"
@@ -177,8 +185,9 @@ function EditModal({
             <div className="text-center">
               <input
                 type="number"
-                inputMode="numeric"
+                inputMode="decimal"
                 min={0}
+                step="0.5"
                 value={loose}
                 onChange={(e) => setLoose(e.target.value)}
                 className="w-16 px-2 py-2 text-center rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm"

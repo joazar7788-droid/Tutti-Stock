@@ -38,16 +38,16 @@ export function PlanItemPopover({
   // Calculate max in the current input unit
   const maxInUnit =
     inputUnit === "boxes" && pcsPerBox > 1
-      ? Math.floor(availablePcs / pcsPerBox)
+      ? availablePcs / pcsPerBox
       : availablePcs;
 
   function handleQtyChange(val: number) {
     // Clamp to max available
-    setQty(Math.min(val, Math.max(1, maxInUnit)));
+    setQty(Math.min(val, Math.max(0.5, maxInUnit)));
   }
 
   function handleConfirm() {
-    if (!selectedBranch || qty < 1) return;
+    if (!selectedBranch || qty < 0.5) return;
     const pcsQty = toPcs(qty, inputUnit, pcsPerBox);
     if (pcsQty > availablePcs) return;
     onConfirm(selectedBranch, pcsQty);
