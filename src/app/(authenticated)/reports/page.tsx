@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { useUser } from "@/lib/context/user-context";
 import { useRouter } from "next/navigation";
@@ -96,7 +97,7 @@ export default function ReportsPage() {
             {lowStock.map((item) => (
               <div key={item.item_id} className="p-4 flex items-center justify-between">
                 <div>
-                  <div className="font-medium">{item.item_name}</div>
+                  <Link href={`/items/${item.item_id}/edit`} className="font-medium hover:text-brand-600 hover:underline">{item.item_name}</Link>
                   <div className="text-sm text-gray-500">{item.sku}</div>
                 </div>
                 <div className="text-right">
@@ -126,7 +127,7 @@ export default function ReportsPage() {
               <div>
                 <div className="flex items-center gap-2">
                   {item.is_favorite && <span className="text-yellow-500">★</span>}
-                  <span className="font-medium">{item.item_name}</span>
+                  <Link href={`/items/${item.item_id}/edit`} className="font-medium hover:text-brand-600 hover:underline">{item.item_name}</Link>
                 </div>
                 <div className="text-sm text-gray-500">
                   {item.sku} · {item.category}

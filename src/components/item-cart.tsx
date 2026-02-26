@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import type { Item } from "@/lib/database.types";
 import { QuantityInput } from "./quantity-input";
 import { UnitToggle } from "./unit-toggle";
@@ -37,7 +38,7 @@ export function ItemCart({
             <div className="flex items-center justify-between gap-3">
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
-                  <span className="font-medium truncate">{item.name}</span>
+                  <Link href={`/items/${item.id}/edit`} className="font-medium truncate hover:text-brand-600 hover:underline">{item.name}</Link>
                   <CategoryTag category={item.category} />
                 </div>
               </div>

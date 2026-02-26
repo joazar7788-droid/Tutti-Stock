@@ -22,7 +22,7 @@ export function ItemRow({ item }: { item: Item }) {
       </button>
 
       <div className="flex-1 min-w-0">
-        <div className="font-medium truncate">{item.name}</div>
+        <Link href={`/items/${item.id}/edit`} className="font-medium truncate block hover:text-brand-600 hover:underline">{item.name}</Link>
         <div className="text-sm text-gray-500">
           {item.sku} · {item.category ?? "No category"} · {item.base_unit}{item.pcs_per_box > 1 ? ` (${item.pcs_per_box} pcs/box)` : ""}
         </div>

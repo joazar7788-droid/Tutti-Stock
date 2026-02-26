@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { formatQty } from "@/lib/unit-utils";
 import { CATEGORY_CONFIG } from "@/components/category-tag";
@@ -399,8 +400,9 @@ function ItemsTable({
                 <div key={item.itemId} className="py-2 px-2">
                   {/* Desktop: grid layout with all columns */}
                   <div className="hidden sm:grid grid-cols-[1fr_repeat(5,80px)_60px] gap-x-1 items-center">
-                    <span
-                      className={`text-sm truncate ${
+                    <Link
+                      href={`/items/${item.itemId}/edit`}
+                      className={`text-sm truncate hover:text-brand-600 hover:underline ${
                         item.qty === 0 &&
                         item.countLastWeek === null &&
                         item.countTwoWeeksAgo === null
@@ -409,7 +411,7 @@ function ItemsTable({
                       }`}
                     >
                       {item.itemName}
-                    </span>
+                    </Link>
                     <div className="text-right">
                       <QtyCell
                         qty={item.countTwoWeeksAgo}
@@ -488,11 +490,12 @@ function ItemsTable({
                   {/* Mobile: stacked layout */}
                   <div className="sm:hidden">
                     <div className="flex items-center justify-between">
-                      <span
-                        className={`text-sm flex-1 truncate ${item.qty === 0 ? "text-gray-300" : ""}`}
+                      <Link
+                        href={`/items/${item.itemId}/edit`}
+                        className={`text-sm flex-1 truncate hover:text-brand-600 hover:underline ${item.qty === 0 ? "text-gray-300" : ""}`}
                       >
                         {item.itemName}
-                      </span>
+                      </Link>
                       <div className="flex items-center gap-1.5">
                         <span
                           className={`text-sm font-mono font-semibold ${item.qty === 0 ? "text-gray-300" : ""}`}

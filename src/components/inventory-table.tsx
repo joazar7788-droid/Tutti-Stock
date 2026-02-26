@@ -119,7 +119,7 @@ export function InventoryTable({
                         itemId={item.item_id}
                         isFavorite={item.is_favorite}
                       />
-                      <span className="font-medium">{item.item_name}</span>
+                      <Link href={`/items/${item.item_id}/edit`} className="font-medium hover:text-brand-600 hover:underline">{item.item_name}</Link>
                       <CategoryTag category={item.category} />
                     </div>
                     {item.pcs_per_box > 1 && (
@@ -196,9 +196,9 @@ export function InventoryTable({
                       itemId={item.item_id}
                       isFavorite={item.is_favorite}
                     />
-                    <span className="font-semibold truncate">
+                    <Link href={`/items/${item.item_id}/edit`} className="font-semibold truncate hover:text-brand-600 hover:underline">
                       {item.item_name}
-                    </span>
+                    </Link>
                     <CategoryTag category={item.category} />
                   </div>
                   {item.pcs_per_box > 1 && (

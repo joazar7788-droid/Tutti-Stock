@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, useCallback } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { formatQty } from "@/lib/unit-utils";
 import { CATEGORY_CONFIG } from "@/components/category-tag";
@@ -11,7 +12,6 @@ import {
   finalizePlan,
   revertPlanToDraft,
 } from "@/app/(authenticated)/delivery-planner/actions";
-import Link from "next/link";
 import type {
   PlannerItem,
   PlannerBranch,
@@ -478,7 +478,7 @@ function ItemRow({
     <tr className="border-t border-gray-50 hover:bg-gray-50/50">
       {/* Item name (sticky) */}
       <td className="sticky left-0 z-10 bg-white px-4 py-2 text-sm font-medium text-gray-900 whitespace-nowrap">
-        {item.name}
+        <Link href={`/items/${item.id}/edit`} className="hover:text-brand-600 hover:underline">{item.name}</Link>
       </td>
 
       {/* Branch count columns */}
