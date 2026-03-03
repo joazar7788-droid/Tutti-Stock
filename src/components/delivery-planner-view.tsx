@@ -291,7 +291,7 @@ export function DeliveryPlannerView({
       </div>
 
       {/* Table */}
-      <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white">
+      <div className="overflow-auto max-h-[calc(100vh-220px)] rounded-xl border border-gray-200 bg-white">
         <table className="w-full min-w-[1100px]">
           <thead className="sticky top-0 z-20">
             <tr className="bg-gray-50 text-xs font-semibold text-gray-500 uppercase tracking-wider">

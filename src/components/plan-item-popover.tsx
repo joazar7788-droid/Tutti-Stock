@@ -125,12 +125,12 @@ export function PlanItemPopover({
                   </span>
                 )}
               </label>
-              <div className="flex items-center gap-3">
-                <QuantityInput
-                  value={qty}
-                  onChange={handleQtyChange}
-                  min={1}
-                />
+              <QuantityInput
+                value={qty}
+                onChange={handleQtyChange}
+                min={1}
+              />
+              <div className="flex justify-center">
                 <UnitToggle
                   value={inputUnit}
                   onChange={(unit) => {

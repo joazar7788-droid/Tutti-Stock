@@ -10,14 +10,14 @@ export function UnitToggle({
   pcsPerBox: number;
 }) {
   return (
-    <div className="flex rounded-lg border border-gray-200 overflow-hidden text-sm">
+    <div className="inline-flex gap-1 rounded-xl bg-gray-100 p-0.5 text-sm">
       <button
         type="button"
         onClick={() => onChange("boxes")}
-        className={`px-3 py-1.5 font-medium transition-colors ${
+        className={`px-3 py-1.5 rounded-lg font-medium transition-colors ${
           value === "boxes"
-            ? "bg-brand-500 text-white"
-            : "bg-white text-gray-600 hover:bg-gray-50"
+            ? "bg-brand-500 text-white shadow-sm"
+            : "text-gray-500 hover:text-gray-700"
         }`}
       >
         cases
@@ -25,10 +25,10 @@ export function UnitToggle({
       <button
         type="button"
         onClick={() => onChange("pcs")}
-        className={`px-3 py-1.5 font-medium transition-colors ${
+        className={`px-3 py-1.5 rounded-lg font-medium transition-colors ${
           value === "pcs"
-            ? "bg-brand-500 text-white"
-            : "bg-white text-gray-600 hover:bg-gray-50"
+            ? "bg-brand-500 text-white shadow-sm"
+            : "text-gray-500 hover:text-gray-700"
         }`}
       >
         pcs
