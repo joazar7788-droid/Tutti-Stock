@@ -293,13 +293,13 @@ export function DeliveryPlannerView({
       {/* Table */}
       <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white">
         <table className="w-full min-w-[1100px]">
-          <thead>
+          <thead className="sticky top-0 z-20">
             <tr className="bg-gray-50 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-              <th className="sticky left-0 z-10 bg-gray-50 text-left px-4 py-3 min-w-[180px]">
+              <th className="sticky left-0 z-30 bg-gray-50 text-left px-4 py-3 min-w-[180px]">
                 Item
               </th>
               {branches.map((b) => (
-                <th key={b.id} className="text-center px-2 py-3 min-w-[80px]">
+                <th key={b.id} className="bg-gray-50 text-center px-2 py-3 min-w-[80px]">
                   <div>{b.name}</div>
                   {b.countDate && (
                     <div className="font-normal normal-case text-gray-400">
@@ -313,10 +313,10 @@ export function DeliveryPlannerView({
                   )}
                 </th>
               ))}
-              <th className="text-center px-2 py-3 min-w-[90px] bg-blue-50/50">
+              <th className="text-center px-2 py-3 min-w-[90px] bg-blue-50">
                 Warehouse
               </th>
-              <th className="text-left px-3 py-3 min-w-[200px] bg-brand-50/30">
+              <th className="text-left px-3 py-3 min-w-[200px] bg-brand-50">
                 To Deliver
               </th>
             </tr>

@@ -3,16 +3,12 @@
 export function UnitToggle({
   value,
   onChange,
-  pcsPerBox,
+  pcsPerBox: _pcsPerBox,
 }: {
   value: "boxes" | "pcs";
   onChange: (unit: "boxes" | "pcs") => void;
   pcsPerBox: number;
 }) {
-  if (pcsPerBox <= 1) {
-    return <span className="text-sm text-gray-500">cases</span>;
-  }
-
   return (
     <div className="flex rounded-lg border border-gray-200 overflow-hidden text-sm">
       <button
