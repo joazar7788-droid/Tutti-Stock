@@ -100,7 +100,8 @@ export default async function DeliveryPlannerPage() {
     const { data: countItems } = await supabase
       .from("stock_count_items")
       .select("stock_count_id, item_id, qty")
-      .in("stock_count_id", countIds);
+      .in("stock_count_id", countIds)
+      .limit(10000);
 
     // Build lookup: branchId -> (itemId -> qty)
     const countIdToBranch = new Map<string, string>();

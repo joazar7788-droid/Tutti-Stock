@@ -59,7 +59,8 @@ export default async function BranchCountsPage({
     const { data: countItems } = await supabase
       .from("stock_count_items")
       .select("id, stock_count_id, item_id, qty")
-      .in("stock_count_id", allCountIds);
+      .in("stock_count_id", allCountIds)
+      .limit(10000);
 
     for (const ci of countItems ?? []) {
       if (!countItemsMap.has(ci.stock_count_id)) {
