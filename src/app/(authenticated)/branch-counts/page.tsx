@@ -52,21 +52,31 @@ export default async function BranchCountsPage({
     }
   }
 
-  // Fetch all count items
+  // Fetch count items in small batches of count IDs so each request stays
+  // well under Supabase's 1000-row response cap regardless of item count.
   const allCountIds = Array.from(countsByBranchWeek.values()).map((c) => c.id);
   let countItemsMap = new Map<string, Array<{ id: string; item_id: string; qty: number }>>();
   if (allCountIds.length > 0) {
-    const { data: countItems } = await supabase
-      .from("stock_count_items")
-      .select("id, stock_count_id, item_id, qty")
-      .in("stock_count_id", allCountIds)
-      .limit(10000);
-
-    for (const ci of countItems ?? []) {
-      if (!countItemsMap.has(ci.stock_count_id)) {
-        countItemsMap.set(ci.stock_count_id, []);
+    const BATCH_SIZE = 5;
+    const batches: string[][] = [];
+    for (let i = 0; i < allCountIds.length; i += BATCH_SIZE) {
+      batches.push(allCountIds.slice(i, i + BATCH_SIZE));
+    }
+    const results = await Promise.all(
+      batches.map((batch) =>
+        supabase
+          .from("stock_count_items")
+          .select("id, stock_count_id, item_id, qty")
+          .in("stock_count_id", batch)
+      )
+    );
+    for (const result of results) {
+      for (const ci of result.data ?? []) {
+        if (!countItemsMap.has(ci.stock_count_id)) {
+          countItemsMap.set(ci.stock_count_id, []);
+        }
+        countItemsMap.get(ci.stock_count_id)!.push(ci);
       }
-      countItemsMap.get(ci.stock_count_id)!.push(ci);
     }
   }
 
