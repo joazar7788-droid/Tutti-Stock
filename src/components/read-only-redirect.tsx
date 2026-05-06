@@ -1,8 +1,9 @@
 import Link from "next/link";
+import type { ReactNode } from "react";
 
 type Variant = "login" | "branchCount" | "default";
 
-const COPY: Record<Variant, { heading: string; body: React.ReactNode }> = {
+const COPY: Record<Variant, { heading: string; body: ReactNode }> = {
   login: {
     heading: "Do not use this website",
     body: (
