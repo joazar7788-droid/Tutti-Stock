@@ -23,15 +23,15 @@ Production is moving from this app to a new system at `Tuttifruttimanagement.com
 ## User experience
 
 ### Counter / staff opens old bookmark → `/login`
-Sees a "We've moved" full-page screen with a prominent button linking to `Tuttifruttimanagement.com`. Small, discreet "Owner login" link in a corner. No login form is visible by default. They have no way to authenticate.
+Sees a full-page redirect screen ("Do not use this website") with a prominent button linking to `Tuttifruttimanagement.com`. Small, discreet "Owner login" link in a corner. No login form is visible by default. They have no way to authenticate.
 
 ### Owner clicks "Owner login"
-Login form expands. They submit credentials. The login server action validates the password AND fetches the profile to check `role === 'owner'`. If anything fails (wrong password, non-owner role, missing profile), they get a generic "Invalid credentials" error and are signed out — no leaking which check failed.
+Login form expands. They submit credentials. The login server action validates the password AND fetches the profile to check `role === 'owner'`. If anything fails (wrong password, non-owner role, missing profile), they get the same explicit error: "This account cannot log in here. Go to Tuttifruttimanagement.com." and are signed out — no leaking which check failed.
 
 ### Owner logged in
 Sees normal navigation. A persistent dismiss-less banner sits at the top of every authenticated page:
 
-> Read-only mode — please use [Tuttifruttimanagement.com](https://Tuttifruttimanagement.com) to enter data.
+> **STOP — Do not enter data on this website.** Go to **Tuttifruttimanagement.com** to enter all data.
 
 Read pages render normally:
 - `/inventory` — stock levels
@@ -45,7 +45,7 @@ Read pages render normally:
 ### Owner clicks any write surface
 Instead of a form, they see a full-page `ReadOnlyRedirect` component with the message and a CTA button to the new site. Applies to:
 - `/transactions/new` (deliver, receive, adjust)
-- `/branch-counts/new`
+- `/count` (counter weekly stock count flow — under `(counter)` route group)
 - `/items/new`
 - `/items/[id]/edit` (if it exists)
 - `/delivery-planner` (if it has writes)
@@ -56,6 +56,40 @@ The current dashboard's quick-action tiles all link to write pages. Replace them
 
 ### Stale session for a non-owner
 Counter/staff who still have a valid session cookie from before the cutover hit the authenticated layout, which checks `role === 'owner'`. If not an owner, the layout signs them out and redirects to `/login`, where they see the moved screen.
+
+## Final copy (approved)
+
+### Banner (every authenticated page)
+> **STOP — Do not enter data on this website.** Go to **Tuttifruttimanagement.com** to enter all data.
+
+### Login page (default screen — what counters and everyone else sees)
+- **Heading:** Do not use this website
+- **Body:** This website is no longer in use. To do branch counts, go to **Tuttifruttimanagement.com**, tap **"Count Branch Stock"**, then enter your PIN.
+- **Button:** Go to Tuttifruttimanagement.com
+
+### Branch-counts redirect screen (`/count` — counter-specific)
+- **Heading:** Do not count here
+- **Body:** Branch counts must now be done on **Tuttifruttimanagement.com**. Tap the button below, then tap **"Count Branch Stock"** and enter your PIN.
+- **Button:** Go to Tuttifruttimanagement.com
+
+### Other write-page redirect screen (transactions, items, delivery-planner — owner-facing)
+- **Heading:** Do not enter data here
+- **Body:** All data entry must be done on **Tuttifruttimanagement.com**. Click the button below to go there now.
+- **Button:** Go to Tuttifruttimanagement.com
+
+### Dashboard CTA card (owner-facing, replaces action tiles)
+- **Heading:** Use the new website
+- **Body:** All data entry has moved to **Tuttifruttimanagement.com**. Click below to go there.
+- **Button:** Go to Tuttifruttimanagement.com
+
+### Server-action error
+> This website no longer accepts entries. Go to Tuttifruttimanagement.com.
+
+### Login error (non-owner credentials submitted to the hidden owner login)
+> This account cannot log in here. Go to Tuttifruttimanagement.com.
+
+### Offline queue toast (one-time on app load)
+> **N entries from before the switch were not saved.** Please re-enter them at Tuttifruttimanagement.com.
 
 ## Architecture
 
@@ -69,13 +103,14 @@ Counter/staff who still have a valid session cookie from before the cutover hit 
 
 #### New shared component: `ReadOnlyRedirect`
 - Lives in `src/components/read-only-redirect.tsx`.
-- Renders a centered card: heading "We've moved", body text explaining the migration, CTA button labeled "Open Tuttifruttimanagement.com" linking to `https://Tuttifruttimanagement.com`.
-- Used by the login page's default state and by every write page.
+- Accepts a `variant` prop — `"login" | "branchCount" | "default"` — that selects which heading + body copy from the "Final copy (approved)" section to render.
+- Renders a centered card with the selected heading, body, and a CTA button labeled "Go to Tuttifruttimanagement.com" linking to `https://Tuttifruttimanagement.com`.
+- Used by the login page (login variant), `/count` and any other branch-count surfaces (branchCount variant), and all other write pages (default variant).
 
 #### New shared component: `ReadOnlyBanner`
 - Lives in `src/components/read-only-banner.tsx`.
-- Persistent, dismiss-less, full-width strip rendered above `<NavBar />` in the authenticated layout.
-- Text: `Read-only mode — please use Tuttifruttimanagement.com to enter data.` with the URL as a link.
+- Persistent, dismiss-less, full-width strip rendered above `<NavBar />` in the authenticated layout. High-contrast styling so it can't be visually ignored.
+- Text matches the approved banner copy in the "Final copy (approved)" section, with `Tuttifruttimanagement.com` rendered as a link.
 
 #### `src/app/login/page.tsx`
 - Default render: full-page `<ReadOnlyRedirect />` with a small "Owner login" link/button in a corner (e.g. bottom-right).
@@ -90,13 +125,17 @@ Counter/staff who still have a valid session cookie from before the cutover hit 
 - After loading the profile, if `profile.role !== 'owner'`, sign the user out and redirect to `/login`.
 - Render `<ReadOnlyBanner />` above `<NavBar />`.
 
+#### `src/app/(counter)/layout.tsx`
+- Same role gate as the authenticated layout: if `profile.role !== 'owner'`, sign the user out and redirect to `/login`. (Counters should never reach this layout because login no longer admits them; this is defense in depth for stale sessions.)
+- An owner who somehow lands here (e.g. via direct URL) hits the same gate and falls through to the write-page replacement on `/count`.
+
 #### `src/app/(authenticated)/dashboard/page.tsx`
 - Replace existing action tiles with a single large CTA card linking to the new site.
 
 #### Write pages
-Replace each page's body with `<ReadOnlyRedirect />`:
+Replace each page's body with `<ReadOnlyRedirect />` (use the branch-counts variant copy on `/count`, the standard variant elsewhere):
+- `src/app/(counter)/count/page.tsx` (counter weekly count flow)
 - `src/app/(authenticated)/transactions/new/page.tsx`
-- `src/app/(authenticated)/branch-counts/new/page.tsx`
 - `src/app/(authenticated)/items/new/page.tsx`
 - `src/app/(authenticated)/items/[id]/edit/page.tsx` (if it exists — verify during implementation)
 - `src/app/(authenticated)/delivery-planner/page.tsx`
@@ -104,7 +143,8 @@ Replace each page's body with `<ReadOnlyRedirect />`:
 Keep the file routes — replacing content is enough; deleting routes risks breaking shared layouts and bookmarked URLs.
 
 #### Server-action guards
-Add a small helper (e.g. `src/lib/read-only-guard.ts`) that returns a standard error: `{ error: "This app is read-only. Please use Tuttifruttimanagement.com to enter data." }`. Call it at the top of every write action in:
+Add a small helper (e.g. `src/lib/read-only-guard.ts`) that returns a standard error: `{ error: "This website no longer accepts entries. Go to Tuttifruttimanagement.com." }`. Call it at the top of every write action in:
+- `src/app/(counter)/count/actions.ts` (`submitStockCount`, `updateExistingCount`; leave `getExistingCount` alone — it's a read)
 - `src/app/(authenticated)/branch-counts/actions.ts`
 - `src/app/(authenticated)/transactions/actions.ts`
 - `src/app/(authenticated)/items/actions.ts` (if writes exist)
@@ -117,7 +157,7 @@ Add a small helper (e.g. `src/lib/read-only-guard.ts`) that returns a standard e
 
 #### Offline IndexedDB queue (Dexie)
 - Disable the sync engine entirely (`src/lib/offline/sync.ts`) — no auto-sync, no manual sync.
-- On authenticated layout mount, if Dexie has queued unsynced transactions, show a one-time toast: `N entries are pending from before the switch — please re-enter them on Tuttifruttimanagement.com.`
+- On authenticated layout mount, if Dexie has queued unsynced transactions, show a one-time toast matching the approved offline-queue copy: `N entries from before the switch were not saved. Please re-enter them at Tuttifruttimanagement.com.`
 - Do not auto-flush the queue. The server-action guard would reject those writes anyway, but a quiet failure is worse UX than a clear toast.
 
 ## What stays unchanged
@@ -137,12 +177,12 @@ Add a small helper (e.g. `src/lib/read-only-guard.ts`) that returns a standard e
 
 ## Test plan
 
-- Counter logs in via saved bookmark → sees moved screen, no login form.
-- Owner clicks "Owner login" → form appears → wrong password → generic error.
-- Counter (test account with `role='counter'`) submits valid credentials → generic error, signed out.
+- Counter opens saved bookmark → sees redirect screen at `/login`, no login form.
+- Owner clicks "Owner login" → form appears → wrong password → "This account cannot log in here..." error.
+- Counter (test account with `role='counter'`) submits valid credentials → same error, signed out.
 - Owner submits valid credentials → reaches dashboard → sees banner → sees CTA card.
-- Owner navigates to `/branch-counts/new` directly → sees redirect screen.
-- Owner navigates to `/transactions/new` → sees redirect screen.
+- Owner navigates to `/count` directly → sees branch-counts redirect screen.
+- Owner navigates to `/transactions/new` → sees default redirect screen.
 - Owner navigates to `/inventory` → data loads normally with banner above.
 - Stale non-owner session: open `/dashboard` with a counter cookie → bounced to `/login`, signed out.
 - Server-action guard: call a write action via direct fetch with valid owner session → returns the read-only error, no DB write.
