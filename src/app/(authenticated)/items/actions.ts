@@ -1,10 +1,13 @@
+// @ts-nocheck
 "use server";
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { readOnlyError } from "@/lib/read-only-guard";
 
 export async function createItem(formData: FormData) {
+  return readOnlyError();
   const supabase = await createClient();
 
   const baseUnit = (formData.get("base_unit") as string) || "boxes";
@@ -32,6 +35,7 @@ export async function createItem(formData: FormData) {
 }
 
 export async function updateItem(id: string, formData: FormData) {
+  return readOnlyError();
   const supabase = await createClient();
   const {
     data: { user },
@@ -68,6 +72,7 @@ export async function updateItem(id: string, formData: FormData) {
 }
 
 export async function toggleItemActive(id: string, isActive: boolean) {
+  return readOnlyError();
   const supabase = await createClient();
 
   const { error } = await supabase
@@ -83,6 +88,7 @@ export async function toggleItemActive(id: string, isActive: boolean) {
 }
 
 export async function toggleItemFavorite(id: string, isFavorite: boolean) {
+  return readOnlyError();
   const supabase = await createClient();
 
   const { error } = await supabase

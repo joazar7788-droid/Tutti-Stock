@@ -3,8 +3,10 @@
 import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
+import { readOnlyError } from "@/lib/read-only-guard";
 
 export async function getOrCreateDraftPlan(weekOf: string) {
+  return readOnlyError();
   const supabase = await createClient();
   const {
     data: { user },
@@ -34,6 +36,7 @@ export async function getOrCreateDraftPlan(weekOf: string) {
   const { data: plan, error } = await adminClient
     .from("delivery_plans")
     .insert({
+      // @ts-ignore — dead code, user narrowing bypassed by read-only guard
       created_by: user.id,
       week_of: weekOf,
       status: "draft",
@@ -41,6 +44,7 @@ export async function getOrCreateDraftPlan(weekOf: string) {
     .select("*")
     .single();
 
+  // @ts-ignore — dead code, error narrowing bypassed by read-only guard
   if (error) return { error: error.message };
 
   return { plan, items: [] };
@@ -51,7 +55,9 @@ export async function addPlanItem(
   itemId: string,
   toLocationId: string,
   qty: number
-) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+): Promise<{ error?: string; item?: any }> {
+  return readOnlyError();
   const supabase = await createClient();
   const {
     data: { user },
@@ -108,13 +114,15 @@ export async function addPlanItem(
     .select("*")
     .single();
 
+  // @ts-ignore — dead code, error narrowing bypassed by read-only guard
   if (error) return { error: error.message };
 
   revalidatePath("/delivery-planner");
   return { item };
 }
 
-export async function removePlanItem(planItemId: string) {
+export async function removePlanItem(planItemId: string): Promise<{ error?: string; success?: boolean }> {
+  return readOnlyError();
   const adminClient = createAdminClient();
 
   const { error } = await adminClient
@@ -122,6 +130,7 @@ export async function removePlanItem(planItemId: string) {
     .delete()
     .eq("id", planItemId);
 
+  // @ts-ignore — dead code, error narrowing bypassed by read-only guard
   if (error) return { error: error.message };
 
   revalidatePath("/delivery-planner");
@@ -129,6 +138,7 @@ export async function removePlanItem(planItemId: string) {
 }
 
 export async function updatePlanItem(planItemId: string, qty: number) {
+  return readOnlyError();
   if (qty <= 0) return { error: "Quantity must be greater than 0" };
 
   const adminClient = createAdminClient();
@@ -138,13 +148,15 @@ export async function updatePlanItem(planItemId: string, qty: number) {
     .update({ qty })
     .eq("id", planItemId);
 
+  // @ts-ignore — dead code, error narrowing bypassed by read-only guard
   if (error) return { error: error.message };
 
   revalidatePath("/delivery-planner");
   return { success: true };
 }
 
-export async function finalizePlan(planId: string) {
+export async function finalizePlan(planId: string): Promise<{ error?: string; success?: boolean }> {
+  return readOnlyError();
   const supabase = await createClient();
   const {
     data: { user },
@@ -159,6 +171,7 @@ export async function finalizePlan(planId: string) {
     .eq("plan_id", planId)
     .limit(1);
 
+  // @ts-ignore — dead code, items narrowing bypassed by read-only guard
   if (!items || items.length === 0) {
     return { error: "Cannot finalize an empty plan" };
   }
@@ -170,13 +183,15 @@ export async function finalizePlan(planId: string) {
     .eq("id", planId)
     .eq("status", "draft");
 
+  // @ts-ignore — dead code, error narrowing bypassed by read-only guard
   if (error) return { error: error.message };
 
   revalidatePath("/delivery-planner");
   return { success: true };
 }
 
-export async function revertPlanToDraft(planId: string) {
+export async function revertPlanToDraft(planId: string): Promise<{ error?: string; success?: boolean }> {
+  return readOnlyError();
   const supabase = await createClient();
   const {
     data: { user },
@@ -188,9 +203,11 @@ export async function revertPlanToDraft(planId: string) {
   const { data: profile } = await supabase
     .from("profiles")
     .select("role")
+    // @ts-ignore — dead code, user narrowing bypassed by read-only guard
     .eq("id", user.id)
     .single();
 
+  // @ts-ignore — dead code, profile narrowing bypassed by read-only guard
   if (!profile || profile.role !== "owner") {
     return { error: "Only owners can revert finalized plans" };
   }
@@ -202,6 +219,7 @@ export async function revertPlanToDraft(planId: string) {
     .eq("id", planId)
     .eq("status", "finalized");
 
+  // @ts-ignore — dead code, error narrowing bypassed by read-only guard
   if (error) return { error: error.message };
 
   revalidatePath("/delivery-planner");
