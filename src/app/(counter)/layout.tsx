@@ -28,6 +28,11 @@ export default async function CounterLayout({
     redirect("/login");
   }
 
+  if (profile.role !== "owner") {
+    await supabase.auth.signOut();
+    redirect("/login");
+  }
+
   return (
     <UserProvider
       value={{
