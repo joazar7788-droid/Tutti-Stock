@@ -5,6 +5,11 @@ const withPWA = withPWAInit({
   dest: "public",
   disable: process.env.NODE_ENV === "development",
   register: true,
+  workboxOptions: {
+    cacheId: "tutti-stock-readonly-2026-05-06",
+    skipWaiting: true,
+    clientsClaim: true,
+  },
 });
 
 const nextConfig: NextConfig = {};
