@@ -17,7 +17,7 @@ import type {
   PlannerBranch,
   PlannerPlan,
   PlannerPlanItem,
-} from "@/app/(authenticated)/delivery-planner/page";
+} from "@/app/(authenticated)/delivery-planner/types";
 
 export function DeliveryPlannerView({
   items,
