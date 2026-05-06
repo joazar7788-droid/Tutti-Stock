@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { UserProvider } from "@/lib/context/user-context";
 import { NavBar } from "@/components/nav-bar";
 import { OfflineBanner } from "@/components/offline-banner";
+import { ReadOnlyBanner } from "@/components/read-only-banner";
 
 export default async function AuthenticatedLayout({
   children,
@@ -29,6 +30,11 @@ export default async function AuthenticatedLayout({
     redirect("/login");
   }
 
+  if (profile.role !== "owner") {
+    await supabase.auth.signOut();
+    redirect("/login");
+  }
+
   return (
     <UserProvider
       value={{
@@ -40,6 +46,7 @@ export default async function AuthenticatedLayout({
       }}
     >
       <div className="min-h-dvh flex flex-col">
+        <ReadOnlyBanner />
         <NavBar />
         <OfflineBanner />
         <main className="flex-1 p-4 max-w-7xl mx-auto w-full">
