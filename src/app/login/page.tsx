@@ -1,9 +1,12 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { signIn } from "./actions";
+import { ReadOnlyRedirect } from "@/components/read-only-redirect";
 
 export default function LoginPage() {
+  const [showForm, setShowForm] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -17,17 +20,37 @@ export default function LoginPage() {
     }
   }
 
+  if (!showForm) {
+    return (
+      <div className="min-h-dvh flex flex-col items-center justify-center bg-gray-50 px-4 py-8">
+        <ReadOnlyRedirect variant="login" />
+        <button
+          onClick={() => setShowForm(true)}
+          className="mt-6 text-xs text-gray-400 hover:text-gray-600 underline"
+        >
+          Owner login
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-dvh flex items-center justify-center bg-gray-50 px-4">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-brand-600">Tutti Stock</h1>
-          <p className="text-gray-500 mt-2">Inventory Management</p>
+          <p className="text-gray-500 mt-2">Owner Login</p>
         </div>
 
-        <form action={handleSubmit} className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 space-y-4">
+        <form
+          action={handleSubmit}
+          className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 space-y-4"
+        >
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+            <label
+              htmlFor="email"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
               Email
             </label>
             <input
@@ -42,7 +65,10 @@ export default function LoginPage() {
           </div>
 
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+            <label
+              htmlFor="password"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
               Password
             </label>
             <input
@@ -69,6 +95,26 @@ export default function LoginPage() {
           >
             {loading ? "Signing in..." : "Sign In"}
           </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setShowForm(false);
+              setError(null);
+            }}
+            className="w-full text-sm text-gray-500 hover:text-gray-700"
+          >
+            ← Back
+          </button>
+
+          <div className="pt-2 border-t border-gray-100">
+            <Link
+              href="https://Tuttifruttimanagement.com"
+              className="block text-center text-sm text-brand-600 hover:text-brand-700"
+            >
+              Go to Tuttifruttimanagement.com →
+            </Link>
+          </div>
         </form>
       </div>
     </div>
