@@ -5,34 +5,23 @@ import { useUser } from "@/lib/context/user-context";
 
 export function OfflineBanner() {
   const { userId } = useUser();
-  const { isOnline, pendingCount, syncing, lastSyncResult } = useOfflineSync(userId);
+  const { isOnline, pendingCount } = useOfflineSync(userId);
 
-  if (isOnline && pendingCount === 0 && !lastSyncResult) return null;
+  if (isOnline && pendingCount === 0) return null;
 
   return (
-    <div
-      className={`px-4 py-2 text-sm font-medium text-center ${
-        !isOnline
-          ? "bg-amber-100 text-amber-800"
-          : syncing
-          ? "bg-blue-100 text-blue-800"
-          : lastSyncResult
-          ? "bg-green-100 text-green-800"
-          : pendingCount > 0
-          ? "bg-amber-100 text-amber-800"
-          : ""
-      }`}
-    >
+    <div className="bg-amber-100 text-amber-800 px-4 py-2 text-sm font-medium text-center">
       {!isOnline && (
-        <>
-          You&apos;re offline — transactions will sync when connected
-          {pendingCount > 0 && ` (${pendingCount} pending)`}
-        </>
+        <>You&apos;re offline — this site is read-only either way</>
       )}
-      {isOnline && syncing && "Syncing transactions..."}
-      {isOnline && !syncing && lastSyncResult && lastSyncResult}
-      {isOnline && !syncing && !lastSyncResult && pendingCount > 0 && (
-        <>{pendingCount} transaction{pendingCount !== 1 ? "s" : ""} pending sync</>
+      {isOnline && pendingCount > 0 && (
+        <>
+          <strong>
+            {pendingCount} {pendingCount === 1 ? "entry was" : "entries were"}{" "}
+            saved offline before the switch and will not be synced.
+          </strong>{" "}
+          Please re-enter them at Tuttifruttimanagement.com.
+        </>
       )}
     </div>
   );

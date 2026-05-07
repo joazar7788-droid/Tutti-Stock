@@ -1,13 +1,16 @@
+// @ts-nocheck
 "use server";
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { readOnlyError } from "@/lib/read-only-guard";
 
 export async function createDelivery(data: {
   toLocationId: string;
   items: Array<{ itemId: string; qty: number }>;
   note?: string;
 }) {
+  return readOnlyError();
   const supabase = await createClient();
   const {
     data: { user },
@@ -49,6 +52,7 @@ export async function createReceive(data: {
   items: Array<{ itemId: string; qty: number }>;
   note?: string;
 }) {
+  return readOnlyError();
   const supabase = await createClient();
   const {
     data: { user },
@@ -81,6 +85,7 @@ export async function createAdjustment(data: {
   direction: "add" | "remove";
   reason: string;
 }) {
+  return readOnlyError();
   const supabase = await createClient();
   const {
     data: { user },

@@ -3,6 +3,9 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 
+const LOGIN_ERROR =
+  "This account cannot log in here. Go to Tuttifruttimanagement.com.";
+
 export async function signIn(formData: FormData) {
   const supabase = await createClient();
 
@@ -12,10 +15,9 @@ export async function signIn(formData: FormData) {
   });
 
   if (error) {
-    return { error: error.message };
+    return { error: LOGIN_ERROR };
   }
 
-  // Check role + stock access for redirect
   const { data: profile } = await supabase
     .from("profiles")
     .select("role")
@@ -23,13 +25,9 @@ export async function signIn(formData: FormData) {
     .eq("stock_access", true)
     .single();
 
-  if (!profile) {
+  if (!profile || profile.role !== "owner") {
     await supabase.auth.signOut();
-    return { error: "You don't have access to this site." };
-  }
-
-  if (profile.role === "counter") {
-    redirect("/count");
+    return { error: LOGIN_ERROR };
   }
 
   redirect("/dashboard");

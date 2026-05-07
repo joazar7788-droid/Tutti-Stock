@@ -1,10 +1,13 @@
+// @ts-nocheck
 "use server";
 
 import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
+import { readOnlyError } from "@/lib/read-only-guard";
 
 export async function deleteStockCount(countId: string) {
+  return readOnlyError();
   const supabase = createAdminClient();
 
   const { error } = await supabase
@@ -24,6 +27,7 @@ export async function submitManagerStockCount(data: {
   weekOf: string;
   items: Array<{ itemId: string; qty: number }>;
 }) {
+  return readOnlyError();
   const supabase = await createClient();
   const {
     data: { user },
@@ -73,6 +77,7 @@ export async function updateStockCountItem(
   stockCountItemId: string,
   newQty: number
 ) {
+  return readOnlyError();
   const supabase = createAdminClient();
 
   const { error } = await supabase

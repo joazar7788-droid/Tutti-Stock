@@ -1,7 +1,9 @@
+// @ts-nocheck
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { readOnlyError } from "@/lib/read-only-guard";
 
 export async function getExistingCount(locationId: string, weekOf: string) {
   const supabase = await createClient();
@@ -46,6 +48,7 @@ export async function updateExistingCount(data: {
   countedBy: string;
   items: Array<{ itemId: string; qty: number }>;
 }) {
+  return readOnlyError();
   const supabase = await createClient();
   const {
     data: { user },
@@ -104,6 +107,7 @@ export async function submitStockCount(data: {
   weekOf: string;
   items: Array<{ itemId: string; qty: number }>;
 }) {
+  return readOnlyError();
   const supabase = await createClient();
   const {
     data: { user },
